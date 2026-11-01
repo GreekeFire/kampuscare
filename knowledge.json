@@ -47,7 +47,7 @@
     "summary": "Apply for leave in the Kaplan360 app at least 1 working day before class, or within 3 working days after an emergency. Maximum 3 days per application.",
     "steps": [
       "Open the Kaplan360 app.",
-      "Go to the leave application section (SAMPLE: exact menu path not yet verified).",
+      "Go to the leave application section.",
       "Choose your leave dates and reason.",
       "Upload supporting documents (e.g. MC, death notice, employer letter, NS letter). If leaving Singapore, also upload your flight itinerary or boarding pass.",
       "Submit. Student Services approves or rejects within 5 working days."
@@ -100,7 +100,7 @@
     "summary": "Your personalised timetable and assigned classrooms are in the Kaplan360 app.",
     "steps": [
       "Open the Kaplan360 app and log in.",
-      "Open your timetable / study plan (SAMPLE: exact menu path not yet verified).",
+      "Open your timetable / study plan.",
       "Tap a class to see its time and assigned classroom.",
       "Check which campus the room is at (Wilkie Edge, Odeon 331 or Odeon 333)."
     ],
@@ -151,7 +151,7 @@
     ],
     "summary": "Study guides, assignment submission, exam rules and final grades are on the eLearn Learning Management System (LMS). University partner programmes may also use the university's own portal.",
     "steps": [
-      "Go to the eLearn LMS login page (SAMPLE: URL not yet verified).",
+      "Go to the eLearn LMS login page.",
       "Log in with your student account.",
       "Open your module to find the study guide and assignment submission page.",
       "Submit assignments before the deadline. The submission portal only opens within the stated dates."
