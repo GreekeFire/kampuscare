@@ -1,5 +1,21 @@
 # KampusCare
 
+> ## 👋 Start here
+>
+> **Live app:** https://kampuscare.vercel.app
+>
+> **What it is:** a website where Kaplan students ask "how do I…" questions in any language. It answers only from verified Kaplan info, shows the source and the date checked, and says so when it doesn't know.
+>
+> **Status (1 Nov 2026):** working and deployed. It answers from 21 topics taken from Kaplan's public website. 3 topics (timetable, leave, LMS) show "steps unverified" because Kaplan360 and LMS screens aren't public.
+>
+> **What the team needs to do:**
+> 1. **Screenshots.** See [SCREENSHOTS.md](SCREENSHOTS.md). Items 1–14 are needed tonight.
+> 2. **Read [PITCH-NOTES.md](PITCH-NOTES.md):** how we differ from Kaplan's existing "Ask K360" chatbot, and answers to likely judge questions.
+> 3. **Record a backup demo video** using the script in section 8 below.
+> 4. **At the hackathon:** pick 2+ surprise features from section 9 (most are small add-ons).
+>
+> **Files you'll touch:** `knowledge.json` (the answers) and nothing else, unless you're adding a surprise feature. Everything below is technical detail.
+
 **A Kaplan "how do I…" guide that only answers from verified Kaplan information.**
 
 A student asks in their own words and in any language, e.g. "how do I see my classes?" KampusCare replies with step-by-step instructions, who to contact, a source link, and the date the information was last checked. If it doesn't know, it says so and points to Student Services instead of guessing.

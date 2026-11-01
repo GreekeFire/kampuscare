@@ -1,102 +1,72 @@
-# Screenshots needed
+# Screenshots needed for KampusCare
 
-Everything the team needs to capture so KampusCare's steps are real, not guessed. Kaplan360, the LMS and university portals are behind a login, so only students can get these.
+Kaplan360, the LMS and the uni portals need a login, so only students can get these. They turn KampusCare's guessed steps into real ones.
 
-## How to take them
+**Rules**
+- Take one screenshot per screen, in the order you tap.
+- Write down the exact button names as they appear on screen.
+- Never submit any form. Open it, screenshot it, then back out.
+- Blur your name, student ID, photo, phone number, email and grades before sending.
+- Name files by number, e.g. `2-leave-form.png`. If one item needs several screens, use `2a`, `2b`, `2c`.
+- Say which programme you're in (Kaplan Diploma, Murdoch, UCD, etc.).
 
-- **Phone screenshots, in tap order.** One screenshot per screen, from the home screen to the final screen.
-- **Write down the exact button and tab names** next to each one, spelled exactly as on screen. That's what goes into the steps.
-- **Never submit anything.** Open forms and screenshot them, then back out.
-- **Privacy:** blur or crop your name, student ID, photo, phone number, email and grades **before** sharing. Your phone's markup tool is fine.
-- **Name files** `<number>-<short-name>-<step>.png`, e.g. `02-leave-1.png`, `02-leave-2.png`, and put them in one shared folder.
-- Say **which programme** you're in (Kaplan Diploma, Murdoch, UCD, etc.). Some screens differ by programme.
+## Tonight: needed for the demo (1–14)
 
-Priorities: **P1** = needed for the demo (do tonight). **P2** = makes the bot much more useful. **P3** = nice to have.
+1. Kaplan360 timetable: home → the timetable → tap one class so it shows time, room and campus
+2. Kaplan360 leave form: the leave menu → the empty form (don't submit)
+3. Kaplan360 leave form with the "reason" dropdown opened
+4. Kaplan360 attendance %
+5. Ask K360: how you open it in Kaplan360
+6. Ask K360's answer to: "How do I apply for leave?"
+7. Ask K360's answer to: "Which clinic can I go to with my student insurance?"
+8. Ask K360's answer to: "How do I withdraw from my programme?"
+9. Ask K360's answer to: "我生病了明天不能上课怎么办"
+10. Ask K360's answer to: "Where is the nearest bubble tea?"
+11. LMS (eLearn) login page, with the URL bar visible
+12. LMS dashboard after logging in (the list of modules)
+13. The welcome email Kaplan sent when you started
+14. 5–10 real freshman questions from class or batch group chats (blur all names and numbers)
 
----
+## Soon: makes the bot much more useful (15–33)
 
-## A. Kaplan360 app
+15. Kaplan360 home screen, showing every icon and menu
+16. Kaplan360 onboarding checklist
+17. Kaplan360 edit-contact-details screen
+18. Kaplan360 notifications / announcements
+19. Kaplan360 where you check if leave was approved
+20. Kaplan360 counselling: "Academic" → "Counselling" → "+ New" (just confirm it matches)
+21. LMS inside one module: where the study guide and materials are
+22. LMS assignment submission page (don't upload anything)
+23. LMS grades / results page (blur the grades)
+24. Murdoch: the Kaplan Student Enrolment Portal
+25. Murdoch student portal login page (URL visible)
+26. UCD student portal or Brightspace login (URL visible), plus the module list
+27. Campus wifi: the network name and how to log in
+28. Student email: the login page and the email address format (blurred)
+29. Printing on campus: how to do it and the cost
+30. The attendance QR code in class, and what your phone shows after scanning
+31. Insurance card or MediHub app: what you show at the clinic
+32. Orientation slides or handouts, if anyone kept them
+33. A quick poll result: "What was hardest to find in your first month at Kaplan?"
 
-| # | Pri | Screenshot | Unlocks |
-|---|---|---|---|
-| 1 | P1 | **Timetable:** home → wherever the timetable or study plan is → one class tapped open, showing time, room and campus | fixes `timetable` |
-| 2 | P1 | **Leave application:** home → leave menu → the empty form (dates, reason dropdown, upload button). Also open the reason dropdown and screenshot the options | fixes `leave` |
-| 3 | P1 | **Attendance:** where the attendance % is shown (overall and per module, if both exist) | confirms `attendance` |
-| 4 | P1 | **Ask K360:** how to open it, plus its answers to the 5 test questions in section F | the comparison slide |
-| 5 | P2 | **Home screen**, the whole thing, scrolled to show every icon in the bottom bar and menu | lets us describe the app's layout correctly |
-| 6 | P2 | **Onboarding checklist:** where it is and what items are on it | new entry: freshman checklist |
-| 7 | P2 | **Update contact details:** profile → edit screen | confirms `update-details` |
-| 8 | P2 | **Notifications:** where announcements appear | new entry: where Kaplan posts updates |
-| 9 | P2 | **Leave status:** where you check if leave was approved | adds to `leave` |
-| 10 | P2 | **Counselling:** "Academic" → "Counselling" → "+ New" (just confirm it still matches the handbook) | confirms `counselling` |
-| 11 | P3 | **Official documents / letters request** (e.g. student status letter), if it exists in the app | new entry |
-| 12 | P3 | **Programme progression / results**, if shown in the app | adds to `results` |
-| 13 | P3 | **Login screen and "forgot password"** | adds to `kaplan360-login` |
-| 14 | P3 | **Every other menu item you see**, one screenshot per section | might reveal topics we've missed |
+## If there's time (34–46)
 
-## B. Kaplan eLearn LMS
-
-| # | Pri | Screenshot | Unlocks |
-|---|---|---|---|
-| 15 | P1 | **Login page with the URL bar visible** (on a laptop or phone browser) | fixes `lms` |
-| 16 | P1 | **Dashboard after login:** the list of modules | fixes `lms` |
-| 17 | P2 | **Inside one module:** where the study guide and materials are | adds to `lms` |
-| 18 | P2 | **Assignment submission page** (don't upload anything) | adds to `lms` |
-| 19 | P2 | **Where grades and results appear** (blur the grades) | fixes `results` |
-| 20 | P3 | **Where exam rules and timetables are posted** | new entry: exams |
-| 21 | P3 | **Online class link:** how you join a Zoom or Teams class from the LMS | new entry: online classes |
-
-## C. University portals (whichever your team has access to)
-
-| # | Pri | Screenshot | Unlocks |
-|---|---|---|---|
-| 22 | P2 | **Murdoch:** the Kaplan Student Enrolment Portal, plus the MyMurdoch or Murdoch student portal login (URL visible) | confirms `murdoch-enrolment` |
-| 23 | P2 | **UCD:** the UCD student portal or Brightspace login (URL visible) and where modules show | new entry: UCD students |
-| 24 | P3 | **Other partner universities** (Portsmouth, Northumbria, BCU, Monash): portal login page with URL | new entries |
-| 25 | P3 | **University library / e-resources access**, e.g. how to log in to journal databases | new entry: library |
-
-## D. Everyday campus stuff (not on Kaplan's website at all)
-
-| # | Pri | Screenshot or photo | Unlocks |
-|---|---|---|---|
-| 26 | P2 | **Campus wifi:** network name and how to log in (any instruction poster or page) | new entry: wifi |
-| 27 | P2 | **Student email:** where you log in (Outlook or Gmail?) and the address format, blurred | new entry: student email |
-| 28 | P2 | **Printing:** how to print on campus, and the cost | new entry: printing |
-| 29 | P2 | **The QR attendance code in class:** what it looks like, and what your phone shows after scanning | adds to `attendance` |
-| 30 | P3 | **Room-number signs and floor directory** at each campus (photos) | adds to `campuses`: "room 5-12 means Level 5" |
-| 31 | P3 | **Study areas / quiet rooms / Wellness Room** (Odeon 333 has one) | new entry: where to study |
-| 32 | P3 | **Lost and found / where reception is** at each campus | new entry |
-| 33 | P3 | **Student card / ID:** front only, fully blurred, just to show what it's used for | new entry |
-
-## E. Orientation and freshman material
-
-| # | Pri | Screenshot | Unlocks |
-|---|---|---|---|
-| 34 | P1 | **Welcome email** from Kaplan when you started (blur personal details) | shows what freshmen are told vs. what they still ask |
-| 35 | P2 | **Orientation slides or handouts**, if anyone kept them | new freshman entries |
-| 36 | P2 | **Insurance card or MediHub app:** how you show insurance at a clinic | fixes `insurance-clinic` |
-| 37 | P3 | **Student's Pass collection / medical check-up instructions** (international students) | new entry |
-
-## F. Evidence for the pitch (worth 15% of the score)
-
-| # | Pri | What | Why |
-|---|---|---|---|
-| 38 | P1 | **Ask K360 test:** ask it these 5 and screenshot each answer:<br>1. How do I apply for leave?<br>2. Which clinic can I go to with my student insurance?<br>3. How do I withdraw from my programme?<br>4. 我生病了明天不能上课怎么办<br>5. Where is the nearest bubble tea? | the side-by-side comparison slide |
-| 39 | P1 | **Group chat questions:** 5–10 freshman questions from class or batch Telegram/WhatsApp groups that KampusCare answers (blur all names and numbers) | proves the problem is real |
-| 40 | P2 | **Quick poll result:** "What was hardest to find in your first month?" | evidence of need |
-
----
-
-## Minimum before the demo (P1 only, about 30 minutes)
-
-1. Timetable (#1)
-2. Leave form (#2)
-3. Attendance % (#3)
-4. Ask K360 answers (#4 and #38)
-5. LMS login page with URL, plus dashboard (#15–16)
-6. Welcome email (#34)
-7. Group chat questions (#39)
+34. Kaplan360: requesting official documents or letters, if it exists
+35. Kaplan360: results or programme progression, if shown
+36. Kaplan360 login screen and "forgot password"
+37. Every other Kaplan360 menu section, one screenshot each
+38. LMS: where exam rules and the exam timetable are posted
+39. LMS: how you join an online (Zoom or Teams) class
+40. Other uni portals' login pages: Portsmouth, Northumbria, BCU, Monash (URL visible)
+41. Library / e-resources: how to log in to journal databases
+42. Photos of room-number signs and the floor directory at each campus
+43. Study areas, quiet rooms, the Wellness Room
+44. Reception and lost-and-found locations
+45. Student card, front only, fully blurred
+46. Student's Pass collection or medical check-up instructions (international students)
 
 ## Sending them back
 
-Put everything in one shared folder (Google Drive or Telegram), named as above, with a short note for each: *"Kaplan Diploma, Kaplan360 v_._, tapped: Home → X → Y."* Whoever updates `knowledge.json` rewrites the steps, sets `"sample": false` and changes `reviewed` to the date checked. New topics become new entries in the same format.
+Put everything in one shared folder (Google Drive or Telegram). Add a one-line note for each, e.g. *"2, Kaplan Diploma: Home → Requests → Leave."*
+
+Whoever updates `knowledge.json` rewrites the steps, sets `"sample": false`, and changes `reviewed` to the date checked.
