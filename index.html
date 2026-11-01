@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KampusCare</title>
+<style>
+  /* One accent, used only for things you act on: step numbers, links, the Ask button. */
+  :root { --paper:#fbfaf7; --ink:#1b1a1f; --muted:#67646d; --rule:#e3e0d8; --accent:#4b2a78; --warn:#8a4b00; --warn-bg:#fbefdc; --red:#a3221b; --red-bg:#fcebe9; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  a { color:var(--accent); }
+  header { display:flex; align-items:baseline; justify-content:space-between; gap:12px; max-width:760px; margin:0 auto; padding:18px 16px 0; }
+  .brand { font-weight:700; letter-spacing:-.01em; }
+  .urgent { background:none; border:0; padding:0; font:inherit; font-size:14px; color:var(--red); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+  main { max-width:760px; margin:0 auto; padding:8px 16px 150px; }
+
+  /* Start screen: the knowledge base itself, so students see what it covers and where it came from. */
+  .intro h1 { font-size:clamp(28px,5vw,40px); line-height:1.1; letter-spacing:-.025em; margin:40px 0 12px; max-width:16ch; }
+  .intro .stance { color:var(--muted); max-width:56ch; margin:0 0 32px; }
+  .index { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr)); gap:28px 40px; }
+  .index h2 { font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:0 0 6px; padding-bottom:6px; border-bottom:1px solid var(--rule); }
+  .index ul { list-style:none; margin:0; padding:0; }
+  .index button { all:unset; display:block; width:100%; padding:7px 0; cursor:pointer; color:var(--ink); }
+  .index button:hover, .index button:focus-visible { color:var(--accent); text-decoration:underline; text-underline-offset:3px; }
+  .index .tag { font-size:11px; color:var(--warn); margin-left:6px; white-space:nowrap; }
+  .provenance { margin:32px 0 0; padding-top:12px; border-top:1px solid var(--rule); font-size:13px; color:var(--muted); }
+
+  /* Conversation */
+  .me { margin:28px 0 8px; font-weight:600; font-size:18px; letter-spacing:-.01em; }
+  .reply { margin:0 0 12px; }
+  .thinking { color:var(--muted); }
+  .answer { margin:0 0 18px; padding:2px 0 2px 18px; border-left:3px solid var(--rule); }
+  .answer h3 { margin:0; font-size:15px; font-weight:600; }
+  .answer .why { margin:2px 0 10px; color:var(--muted); font-size:14px; }
+  .steps { list-style:none; counter-reset:s; margin:0 0 10px; padding:0; }
+  .steps li { counter-increment:s; position:relative; padding:5px 0 5px 36px; }
+  .steps li::before { content:counter(s); position:absolute; left:0; top:5px; width:24px; height:24px; border-radius:50%; background:var(--accent); color:#fff; font-size:13px; font-weight:600; display:grid; place-items:center; }
+  .notes { font-size:14px; color:var(--muted); margin:0 0 8px; }
+  .meta { font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .sample { display:inline-block; margin:0 0 6px; padding:1px 7px; border-radius:3px; background:var(--warn-bg); color:var(--warn); font-size:12px; font-weight:600; }
+  .none { color:var(--muted); }
+  .fb { font-size:13px; color:var(--muted); margin:4px 0 0; }
+  .fb button { font:inherit; font-size:13px; background:none; border:1px solid var(--rule); border-radius:4px; padding:1px 10px; margin-left:6px; cursor:pointer; color:var(--ink); }
+  .fb button:hover { border-color:var(--ink); }
+  .err { color:var(--red); }
+  .crisis { margin:16px 0; padding:16px 18px; background:var(--red-bg); border-left:3px solid var(--red); }
+  .crisis h3 { margin:0 0 6px; color:var(--red); font-size:16px; }
+  .crisis ul { margin:8px 0; padding-left:20px; }
+  .crisis a { color:var(--red); font-weight:700; }
+
+  /* Composer */
+  form { position:fixed; inset:auto 0 0 0; background:var(--paper); border-top:1px solid var(--rule); padding:12px 16px calc(12px + env(safe-area-inset-bottom)); }
+  form > div { max-width:760px; margin:0 auto; display:flex; gap:8px; align-items:flex-end; }
+  textarea { flex:1; resize:none; border:1px solid #cfcbc1; border-radius:8px; background:#fff; padding:11px 12px; font:inherit; min-height:48px; max-height:140px; }
+  textarea:focus { outline:2px solid var(--accent); outline-offset:-1px; border-color:transparent; }
+  form button { height:48px; background:var(--accent); color:#fff; border:0; border-radius:8px; padding:0 20px; font:inherit; font-weight:600; cursor:pointer; }
+  form button:disabled { opacity:.45; cursor:wait; }
+  form p { max-width:760px; margin:6px auto 0; font-size:12px; color:var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">KampusCare</span>
+  <button class="urgent" type="button" id="urgent">Urgent help</button>
+</header>
+
+<main id="chat">
+  <section class="intro" id="intro">
+    <h1>How do I do this at Kaplan?</h1>
+    <p class="stance">Ask in your own words, in any language. KampusCare only answers from the Kaplan pages listed below. If your question isn't covered, it tells you who to ask instead of guessing.</p>
+    <div class="index" id="index"></div>
+    <p class="provenance" id="provenance"></p>
+  </section>
+</main>
+
+<form id="form">
+  <div>
+    <textarea id="input" rows="1" maxlength="1000" placeholder="e.g. how do I apply for leave?" aria-label="Your question"></textarea>
+    <button id="send">Ask</button>
+  </div>
+  <p>AI-assisted (Google Gemini). Don't type your name, student ID or medical details. Check anything important with Student Services.</p>
+</form>
+
+<template id="crisis-tpl">
+  <div class="crisis" role="alert">
+    <h3>You don't have to go through this alone</h3>
+    <p>If you are in danger or thinking about ending your life, please reach out now. Someone is available 24 hours a day:</p>
+    <ul>
+      <li>Emergency: <a href="tel:995">995</a></li>
+      <li>Samaritans of Singapore (SOS): <a href="tel:1767">1767</a>, or WhatsApp <a href="https://wa.me/6591511767">9151 1767</a></li>
+      <li>IMH Mental Health Helpline: <a href="tel:63892222">6389 2222</a></li>
+    </ul>
+    <p>When you're ready, Kaplan's counsellors can help too: Kaplan360 → "Academic" → "Counselling".</p>
+  </div>
+</template>
+
+<script>
+const chat = document.getElementById('chat');
+const form = document.getElementById('form');
+const input = document.getElementById('input');
+const sendBtn = document.getElementById('send');
+const history = [];
+
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const scroll = () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+const showCrisis = (into) => { into.append(document.getElementById('crisis-tpl').content.cloneNode(true)); scroll(); };
+const fmtDate = (d) => new Date(d + 'T00:00').toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' });
+
+// Start screen is built from knowledge.json, so it always matches what the bot can answer.
+fetch('/knowledge.json').then((r) => r.json()).then((kb) => {
+  const groups = { 'Getting started': [], 'Classes and exams': [], 'Money and admin': [], 'Health and wellbeing': [] };
+  kb.forEach((e) => (groups[e.group] ||= []).push(e));
+  const index = document.getElementById('index');
+  for (const [name, entries] of Object.entries(groups)) {
+    const sec = el('section'); sec.append(el('h2', null, name));
+    const ul = el('ul');
+    entries.forEach((e) => {
+      const b = el('button', null, e.title.replace(/ \(.*\)$/, '')); b.type = 'button';
+      if (e.sample) b.append(el('span', 'tag', 'steps unverified'));
+      b.onclick = () => ask(e.title.replace(/ \(.*\)$/, ''));
+      const li = el('li'); li.append(b); ul.append(li);
+    });
+    sec.append(ul); index.append(sec);
+  }
+  const latest = kb.map((e) => e.reviewed).sort().at(-1);
+  const unverified = kb.filter((e) => e.sample).length;
+  document.getElementById('provenance').textContent =
+    `${kb.length} topics from the Kaplan Singapore Student Handbook and contact list, last checked ${fmtDate(latest)}. ` +
+    `${unverified} still have Kaplan360 or LMS steps waiting to be confirmed by students.`;
+}).catch(() => {});
+
+function answer(c) {
+  const d = el('div', 'answer');
+  if (c.sample) d.append(el('span', 'sample', 'App steps not yet confirmed'));
+  d.append(el('h3', null, c.title));
+  if (c.why) d.append(el('p', 'why', c.why));
+  const ol = el('ol', 'steps'); c.steps.forEach((s) => ol.append(el('li', null, s))); d.append(ol);
+  if (c.notes) d.append(el('p', 'notes', c.notes));
+  const meta = el('div', 'meta');
+  meta.append(`${c.contact} · checked ${fmtDate(c.reviewed)} · `);
+  const a = el('a', null, 'source'); a.href = c.source; a.target = '_blank'; a.rel = 'noopener'; meta.append(a);
+  d.append(meta);
+  return d;
+}
+
+function feedback(ids) {
+  const f = el('p', 'fb', 'Did this answer it?');
+  for (const [v, label] of [['up', 'Yes'], ['down', 'No']]) {
+    const b = el('button', null, label); b.type = 'button';
+    b.onclick = () => { f.textContent = v === 'up' ? 'Thanks.' : 'Thanks. Student Services: +65 6733 1877.'; fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ feedback: v, ids }) }); };
+    f.append(b);
+  }
+  return f;
+}
+
+async function ask(text) {
+  text = text.trim();
+  if (!text || sendBtn.disabled) return;
+  document.getElementById('intro')?.remove();
+  chat.append(el('p', 'me', text));
+  const bot = el('div'); bot.append(el('p', 'thinking', 'Checking the Kaplan handbook…')); chat.append(bot); scroll();
+  input.value = ''; sendBtn.disabled = true;
+  try {
+    const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text, history }) });
+    const data = await r.json();
+    bot.textContent = '';
+    if (data.crisis) return showCrisis(bot);
+    if (data.error) { bot.append(el('p', 'err', data.error)); return; }
+    bot.append(el('p', 'reply', data.reply || ''));
+    data.cards.forEach((c) => bot.append(answer(c)));
+    if (!data.cards.length) bot.append(el('p', 'none', "That isn't in KampusCare's Kaplan pages yet. Kaplan general enquiries: +65 6733 1877."));
+    bot.append(feedback(data.cards.map((c) => c.id)));
+    history.push({ role: 'user', content: text }, { role: 'assistant', content: data.reply + ' [' + data.cards.map((c) => c.id).join(', ') + ']' });
+  } catch {
+    bot.textContent = ''; bot.append(el('p', 'err', "Couldn't reach KampusCare. Check your connection and try again."));
+  } finally { sendBtn.disabled = false; input.focus(); scroll(); }
+}
+
+form.onsubmit = (e) => { e.preventDefault(); ask(input.value); };
+input.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(input.value); } };
+document.getElementById('urgent').onclick = () => { const d = el('div'); chat.append(d); showCrisis(d); };
+</script>
+</body>
+</html>
