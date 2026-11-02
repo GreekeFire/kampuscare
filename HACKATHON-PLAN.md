@@ -11,6 +11,27 @@ Read README.md and PITCH-NOTES.md first. This file is the to-do list for the 24 
 
 Why these fit: feature 1 is the "week 0, before Kaplan360 login" pitch point. Feature 2 strengthens the main claim ("answers come from verified info") and covers the human-oversight part of the responsible-AI score.
 
+## Build order (agreed)
+
+1. **Step 0, fork fixes (~30 min).** Do these first: both surprise features change `index.html`, and fixing the fork afterwards means merge conflicts.
+2. **Step 3, surprise feature 1** (arrival plan)
+3. **Step 4, surprise feature 2** (review queue)
+4. Step 2, uni contacts
+5. Step 1, English / 中文 dropdown
+6. Step 5, polish and pitch
+
+## How the team's changes feed into the surprise features
+
+| Team change / request | What to add | Ties into |
+|---|---|---|
+| Feedback with reasons ("Not what I asked for", "Incorrect/incomplete", …) | Save the reason on the server. A **"No → Incorrect/incomplete"** puts that answer into the staff review queue with the flag `student_reported`. | **Feature 2.** Students flag, AI drafts a fix, staff decide. Their feedback work becomes part of the human-oversight story. |
+| Links added to steps (LMS portals, clubs page) | Make URLs in steps clickable, and show `\n` as line breaks. | Both features: plan items and staff-approved entries will contain links too. |
+| Murdoch Moodle + Kaplan eLearn links | Plan items pick the right LMS link from the student's programme. | **Feature 1** |
+| Campus codes WE / OD / NB | Add the codes to the `campuses` entry too, so "where is NB-5-12?" works. | Core Q&A |
+| Home button | Make the "KampusCare" header text the home link, in the same style as the rest of the page. | Design consistency |
+| Request: contacts per uni | One entry per university/programme team. | **Feature 1:** the plan ends with "Your Student Services contact: <the right team for your programme>". |
+| Request: English / 中文 dropdown | UI strings plus `title_zh`; send `lang` to the API. | **Feature 1:** generate the plan in Chinese for students who pick 中文. |
+
 ---
 
 ## Step 0: Merge the team's fork (do first, ~20 min)
@@ -85,7 +106,7 @@ Then run `npm test`.
 
 ## Order if time runs short
 
-Steps 0 → 3 → 4 are required (merge plus 2 surprise features). Steps 1 and 2 are the team's requests; do them if time allows, with step 2 first since it's quick.
+Follow the build order at the top. Steps 0, 3 and 4 are required. Steps 2 and 1 come after, if time allows.
 
 ## Model / budget notes
 
