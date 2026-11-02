@@ -112,7 +112,7 @@
   .shot + .me { margin-top:8px; }
   .seen { margin:0 0 6px; font-size:14px; color:var(--muted); }
   /* Wellbeing: breathe → book a counsellor → talk to a senior */
-  #plan-open { margin-bottom:12px; padding:18px 22px; border-left-width:5px; background:var(--accent-bg); font-size:clamp(17px,2.4vw,20px); }
+  #plan-open { margin-bottom:12px; }
   .wb-link { display:block; background:none; border:0; padding:0; margin:-8px 0 14px 21px; font:inherit; font-size:14px; color:var(--accent); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
   .breath { display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center; }
   /* Waves inside a circle: the water level (.level) rises on breathe-in and drains on breathe-out; --d is the current phase length. */
@@ -287,7 +287,7 @@ const STRINGS = {
       reply: 'The counselling team will contact you within 3 working days. It is not for emergencies: for that, use Urgent help.',
       booked: "I've booked it", wellDone: 'Well done. The counselling team will contact you within 3 working days.',
       senior: 'Talk to a senior',
-      seniorIntro: 'Stressed about your course? A senior student from the same field, and ideally the same home country, has been there.',
+      seniorIntro: 'Whether your course feels like a lot or you’re new to Singapore, a senior student who’s been there can help. Pick what you need below.',
       banner: 'Demo: sample profiles, not real students. In the real version, seniors are trained Kaplan peer mentors who opted in.',
       notPro: "Seniors are students, not counsellors or professionals. They share what worked for them; they can't give medical or mental-health advice. For anything serious, book a counsellor above. In an emergency, use Urgent help.",
       mode: 'I want help with', modes: { course: 'Stress about my course (same field)', buddy: "I'm new to Singapore: find me a buddy (same country)" },
@@ -375,7 +375,7 @@ const STRINGS = {
       notes: '心理辅导员不做诊断，也不开药。内容保密，但涉及生命或安全的紧迫威胁时除外。',
       booked: '我已经预约了', wellDone: '做得好。心理辅导团队会在 3 个工作日内联系你。',
       senior: '找学长学姐聊聊',
-      seniorIntro: '课程压力大？同专业、最好来自同一个国家的学长学姐也经历过。',
+      seniorIntro: '无论是课程压力大，还是刚来新加坡，过来人学长学姐都能帮你。在下面选择你需要的帮助。',
       banner: '演示：这些是示例资料，不是真实学生。正式版本中，学长学姐是自愿参加并受过培训的 Kaplan 朋辈导师。',
       notPro: '学长学姐是学生，不是心理辅导员或专业人士。他们分享自己的经验，不能提供医疗或心理健康建议。如果困扰很严重，请在上方预约心理辅导；紧急情况请用“紧急求助”。',
       mode: '我需要的帮助', modes: { course: '课程压力（同专业）', buddy: '我刚来新加坡：帮我找个伙伴（同国家）' },
