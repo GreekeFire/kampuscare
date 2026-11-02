@@ -168,6 +168,8 @@ export default async function handler(req, res) {
   if (out.crisis || isCrisis(seen)) return send(res, 200, { crisis: true });
   let reply = String(out.reply || ''), cards = toCards(out.matches, byId, lang);
   const extra = demo ? { demo: String(out.demo_error || 'injected').slice(0, 300) } : {};
+  // ponytail: checker only in demo mode, to halve free-tier quota use; set CHECK_ALL=1 in env to check every answer.
+  if (!demo && !process.env.CHECK_ALL) return send(res, 200, { seen, reply, cards });
 
   const first = await check(reply, cards, byId);
   if (first.ok) return send(res, 200, { seen, reply, cards, check: { status: first.unchecked ? 'unchecked' : 'passed', caught: [] }, ...extra });
