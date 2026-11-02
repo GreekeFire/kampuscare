@@ -41,7 +41,7 @@ A "Contacts" group with one entry per university/programme from the Oct 2026 Stu
 
 **Builder (tech):**
 - [x] Crisis numbers checked 2 Nov 2026: 995, SOS 1767 / WhatsApp 9151 1767, mindline 1771 / WhatsApp 6669 1771 (IMH 6389 2222 is retired)
-- [ ] Clear the review queue before the pitch
+- [ ] Before the pitch: open /review.html and click "Reset demo" at the bottom (deletes all questions and approved answers)
 - [ ] Make the repo public or invite the judges
 - [ ] Rotate the Gemini key after the hackathon
 

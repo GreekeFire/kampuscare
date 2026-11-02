@@ -148,7 +148,7 @@ Don't trash Ask K360. Frame it as: *"KampusCare shows how a student-support bot 
 4. **Human decides (2 min):** ask "How do I print on campus?" → not covered → **Send this question to Student Services** → open review.html → paste the Kaplan page text → **Draft with AI** → flags appear, Approve is greyed out → tick each flag → edit a step → **Approve** → back in chat, ask again → answer with the "Approved by Student Services" badge.
 5. **Safety (15s):** tap "Urgent help". Don't type a crisis phrase live.
 
-Clear the review queue before the pitch. **Always have a backup video**, recorded the night before.
+Before the pitch, click "Reset demo" at the bottom of /review.html. **Always have a backup video**, recorded the night before.
 
 ## 9. Surprise features we built
 

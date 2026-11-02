@@ -125,6 +125,15 @@ function render(items) {
     }
     q.append(dl);
   }
+  if (items.length) {
+    const reset = el('button', 'link', 'Reset demo: delete every question and approved answer');
+    reset.type = 'button';
+    reset.onclick = async () => {
+      if (!confirm('Delete every question and approved answer? Students will lose the approved answers too.')) return;
+      try { render((await api('clear')).items); } catch (e) { $('err').textContent = e.message; }
+    };
+    const p = el('p'); p.append(reset); q.append(p);
+  }
 }
 
 function detail(item) {

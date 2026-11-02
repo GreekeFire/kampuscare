@@ -91,6 +91,8 @@ export default async function handler(req, res) {
 
     const queue = await getQueue();
     if (body.action === 'list') return send(res, 200, { items: [...queue].sort((a, b) => b.created.localeCompare(a.created)) });
+    // Demo reset: deletes every question and every approved answer, so the live demo starts from "not covered".
+    if (body.action === 'clear') { await saveQueue([]); return send(res, 200, { items: [] }); }
 
     const item = queue.find((i) => i.id === body.id);
     if (!item) return send(res, 404, { error: 'No such question' });
