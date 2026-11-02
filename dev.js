@@ -5,11 +5,13 @@ import { readFileSync } from 'node:fs';
 import handler from './api/chat.js';
 import plan from './api/plan.js';
 import review from './api/review.js';
+import act from './api/act.js';
 
 createServer((req, res) => {
   if (req.url.startsWith('/api/chat')) return handler(req, res);
   if (req.url.startsWith('/api/plan')) return plan(req, res);
   if (req.url.startsWith('/api/review')) return review(req, res);
+  if (req.url.startsWith('/api/act')) return act(req, res);
   const json = req.url === '/knowledge.json';
   const page = req.url.startsWith('/review.html') ? './review.html' : './index.html';
   res.setHeader('Content-Type', json ? 'application/json' : 'text/html; charset=utf-8');
