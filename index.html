@@ -8,11 +8,11 @@
   /* One accent, used only for things you act on: step numbers, links, the Ask button. */
   :root { --paper:#fbfaf7; --ink:#1b1a1f; --muted:#67646d; --rule:#e3e0d8; --accent:#4b2a78; --accent-bg:#efeaf5; --warn:#8a4b00; --warn-bg:#fbefdc; --red:#a3221b; --red-bg:#fcebe9; }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; overflow-wrap:break-word; /* long links never widen the page */ }
   a { color:var(--accent); }
-  header { display:flex; align-items:baseline; justify-content:space-between; gap:12px; max-width:760px; margin:0 auto; padding:18px 16px 0; }
+  header { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:6px 12px; max-width:760px; margin:0 auto; padding:18px 16px 0; }
   .brand { font-weight:700; letter-spacing:-.01em; color:inherit; text-decoration:none; }
-  header nav { display:flex; align-items:baseline; gap:16px; }
+  header nav { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 16px; }
   .urgent { background:none; border:0; padding:0; font:inherit; font-size:14px; color:var(--red); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
   .urgent.back { color:var(--muted); }
   .lang { font:inherit; font-size:14px; color:var(--muted); background:none; border:0; padding:0; cursor:pointer; }
@@ -53,7 +53,7 @@
   .fb { font-size:13px; color:var(--muted); margin:4px 0 0; }
   .fb button { font:inherit; font-size:13px; background:none; border:1px solid var(--rule); border-radius:4px; padding:1px 10px; margin-left:6px; cursor:pointer; color:var(--ink); }
   .fb button:hover { border-color:var(--ink); }
-  .fb input { font:inherit; font-size:13px; border:1px solid var(--rule); border-radius:4px; padding:1px 8px; margin-left:6px; color:var(--ink); background:#fff; max-width:220px; }
+  .fb input { font:inherit; font-size:16px; /* under 16px iOS zooms on focus */ border:1px solid var(--rule); border-radius:4px; padding:1px 8px; margin-left:6px; color:var(--ink); background:#fff; max-width:220px; }
   .err { color:var(--red); }
   .crisis { margin:16px 0; padding:16px 18px; background:var(--red-bg); border-left:3px solid var(--red); }
   .crisis h3 { margin:0 0 6px; color:var(--red); font-size:16px; }
@@ -91,11 +91,12 @@
   /* Composer */
   form { position:fixed; inset:auto 0 0 0; background:var(--paper); border-top:1px solid var(--rule); padding:12px 16px calc(12px + env(safe-area-inset-bottom)); }
   form > div { max-width:760px; margin:0 auto; display:flex; gap:8px; align-items:flex-end; }
-  textarea { flex:1; resize:none; border:1px solid #cfcbc1; border-radius:8px; background:#fff; padding:11px 12px; font:inherit; min-height:48px; max-height:140px; }
+  textarea { flex:1; min-width:0; resize:none; border:1px solid #cfcbc1; border-radius:8px; background:#fff; padding:11px 12px; font:inherit; min-height:48px; max-height:140px; }
   textarea:focus { outline:2px solid var(--accent); outline-offset:-1px; border-color:transparent; }
   form button { height:48px; background:var(--accent); color:#fff; border:0; border-radius:8px; padding:0 20px; font:inherit; font-weight:600; cursor:pointer; }
   form button:disabled { opacity:.45; cursor:wait; }
   form p { max-width:760px; margin:6px auto 0; font-size:12px; color:var(--muted); }
+  form .hint { color:var(--ink); }
   /* Surprise feature 3: photo and voice */
   form .icon { flex:none; width:44px; padding:0; display:grid; place-items:center; background:#fff; color:var(--ink); border:1px solid #cfcbc1; touch-action:none; -webkit-user-select:none; user-select:none; }
   form .icon:hover { border-color:var(--ink); }
@@ -227,7 +228,9 @@
 const STRINGS = {
   en: {
     headline: 'How do I do this at Kaplan?',
-    stance: "Ask in your own words, in any language. KampusCare only answers from the Kaplan pages listed below. If your question isn't covered, it tells you who to ask instead of guessing.",
+    stance: "Ask in your own words, in any language. KampusCare only answers from the Kaplan pages listed below. If your question isn't covered, it tells you who to ask instead of guessing. Type, snap a photo, or hold the mic to ask by voice.",
+    composerHint: '📷 Photo or hold 🎤 the mic to talk.', micTap: 'Hold the mic button while you talk.',
+    danger: 'In danger right now? Tap Urgent help at the top.',
     planOpen: 'New international student? ', planOpenCta: 'Get your first 2 weeks planned →',
     groups: {},
     provenance: (n, date, unverified) => `${n} topics from the Kaplan Singapore Student Handbook and contact list, last checked ${date}. ${unverified} still have Kaplan360 or LMS steps waiting to be confirmed by students.`,
@@ -253,7 +256,7 @@ const STRINGS = {
       queued: 'Sent your question to Student Services', checklist: (title) => `Made a checklist: ${title}`,
     },
     photo: 'Add a photo or screenshot', removePhoto: 'Remove photo', defaultQ: 'What does this mean and what should I do?',
-    photoHint: "Crop out your name, student ID and photo before sending. Photos aren't stored.",
+    photoHint: "Crop out your name, student ID and photo before sending. KampusCare doesn't keep your photo or voice clip; Google's Gemini reads it to answer.",
     photoTooBig: 'That photo is still too large after shrinking. Try cropping it or sending a screenshot.', photoBad: "That file couldn't be opened as a photo.",
     seen: 'In your photo: ', heard: 'You said: ', voiceMsg: '🎤 Voice message',
     check: { passed: '✓ Checked against the Kaplan pages by a second AI', fixed: 'Caught and fixed by a second AI:', contained: "Couldn't verify the AI's wording, so here are the original Kaplan steps.",
@@ -320,7 +323,9 @@ const STRINGS = {
   },
   zh: {
     headline: '在 Kaplan，这件事怎么办？',
-    stance: '用你自己的话提问，任何语言都可以。KampusCare 只根据下面列出的 Kaplan 页面回答。如果你的问题不在范围内，它会告诉你该找谁，而不是乱猜。',
+    stance: '用你自己的话提问，任何语言都可以。KampusCare 只根据下面列出的 Kaplan 页面回答。如果你的问题不在范围内，它会告诉你该找谁，而不是乱猜。可以打字、拍照，或按住麦克风用语音提问。',
+    composerHint: '📷 拍照，或按住 🎤 麦克风说话。', micTap: '说话时请一直按住麦克风按钮。',
+    danger: '现在有危险？请点上方的“紧急求助”。',
     planOpen: '刚来新加坡的国际学生？', planOpenCta: '帮你规划头两周 →',
     groups: { 'Getting started': '入门须知', 'Classes and exams': '上课和考试', 'Money and admin': '费用和行政', 'Health and wellbeing': '健康与身心', 'Contacts': '联系方式' },
     provenance: (n, date, unverified) => `共 ${n} 个主题，来自 Kaplan Singapore 学生手册和联系人名单，最近核对于 ${date}。其中 ${unverified} 个的 Kaplan360 或 LMS 步骤还在等待学生确认。`,
@@ -355,7 +360,7 @@ const STRINGS = {
       queued: '已把你的问题发送给学生服务处', checklist: (title) => `已生成清单：${title}`,
     },
     photo: '添加照片或截图', removePhoto: '移除照片', defaultQ: '这是什么意思？我该怎么做？',
-    photoHint: '发送前请裁掉你的姓名、学号和照片。照片不会被保存。',
+    photoHint: '发送前请裁掉你的姓名、学号和照片。KampusCare 不会保存你的照片或语音；Google 的 Gemini 会读取它来回答。',
     photoTooBig: '照片压缩后仍然太大。请裁剪一下，或改发截图。', photoBad: '无法把这个文件当作照片打开。',
     seen: '照片内容：', heard: '你说的是：', voiceMsg: '🎤 语音消息',
     check: { passed: '✓ 已由第二个 AI 对照 Kaplan 页面核查', fixed: '第二个 AI 发现并更正了错误：', contained: '无法核实 AI 的表述，以下是 Kaplan 原始步骤（英文）。',
@@ -444,6 +449,13 @@ const scroll = () => window.scrollTo({ top: document.body.scrollHeight, behavior
 const fmtDate = (d) => new Date(d + 'T00:00').toLocaleDateString(lang === 'zh' ? 'zh-SG' : 'en-SG', { day: 'numeric', month: 'short', year: 'numeric' });
 const errText = (m) => el('p', 'err', S().serverErrors[m] || m);
 const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+// A Vercel timeout (504) or 413 comes back as HTML/text: that's "AI is busy", not "check your connection".
+const postJson = async (url, body) => {
+  const r = await post(url, body);
+  try { return await r.json(); } catch (err) { if (!r.ok) return { error: 'The AI is busy right now. Please try again in a minute.' }; throw err; }
+};
+// Chat and plan errors always point to Urgent help, so a missed crisis message never ends on a bare error.
+const helpErr = (m) => [errText(m), el('p', 'notes', S().danger)];
 
 // Wording follows the chosen language; numbers and links never change.
 function showCrisis(into) {
@@ -496,7 +508,8 @@ function applyLang() {
   unphoto.setAttribute('aria-label', t.removePhoto);
   micBtn.setAttribute('aria-label', t.mic); micBtn.title = t.mic;
   if (photo) showNote(t.photoHint);
-  document.getElementById('footer').textContent = t.footer;
+  // Hint shares the footer line, so the fixed composer doesn't grow on phones.
+  document.getElementById('footer').replaceChildren(el('span', 'hint', t.composerHint + ' '), t.footer);
   if (document.getElementById('headline')) {
     document.getElementById('headline').textContent = t.headline;
     document.getElementById('stance').textContent = t.stance;
@@ -567,7 +580,7 @@ function doIt(question, id) {
   b.onclick = async () => {
     b.disabled = true; d.replaceChildren(el('p', 'thinking', t.working));
     try {
-      const data = await (await post('/api/act', { question, id, lang })).json();
+      const data = await postJson('/api/act', { question, id, lang });
       d.textContent = '';
       if (data.crisis) return showCrisis(d);
       if (data.error) return d.append(errText(data.error));
@@ -653,25 +666,26 @@ async function ask(text, audio) {
   const bot = el('div'); bot.append(el('p', 'thinking', t.thinking)); chat.append(bot); scroll();
   input.value = ''; sendBtn.disabled = true; attach(null);
   try {
-    const data = await (await post('/api/chat', { message: text, image, audio, history, lang, demoFail })).json();
+    const data = await postJson('/api/chat', { message: text, image, audio, history, lang, demoFail });
     bot.textContent = '';
     if (data.crisis) return showCrisis(bot);
-    if (data.error) { bot.append(errText(data.error)); return; }
+    if (data.error) { bot.append(...helpErr(data.error)); return; }
     if (data.seen) bot.append(el('p', 'seen', (image ? t.seen : t.heard) + data.seen));
     bot.append(el('p', 'reply', data.reply || ''));
+    if (data.busy) bot.append(el('p', 'notes', t.danger)); // AI down: keyword-matched pages only, no crisis flag from the model
     if (data.check) bot.append(checkLine(data.check, data.demo));
     const question = text || data.seen;
-    data.cards.forEach((c) => {
+    data.cards.forEach((c, i) => {
       bot.append(answer(c));
       if (c.id === 'counselling') { const l = el('button', 'wb-link', t.wb.link); l.type = 'button'; l.onclick = openWellbeing; bot.append(l); }
-      bot.append(doIt(question, c.id));
+      if (!i) bot.append(doIt(question, c.id)); // first card only: less clutter, fewer AI calls
     });
     if (!data.cards.length) bot.append(el('p', 'none', t.notCovered), offerReview(question), doIt(question));
     bot.append(feedback(data.cards.map((c) => c.id), question));
     // The photo itself never goes into history, only a "[photo]" marker.
     history.push({ role: 'user', content: (image ? '[photo] ' : '') + question }, { role: 'assistant', content: data.reply + ' [' + data.cards.map((c) => c.id).join(', ') + ']' });
   } catch {
-    bot.textContent = ''; bot.append(el('p', 'err', t.offline));
+    bot.textContent = ''; bot.append(...helpErr(t.offline));
   } finally { sendBtn.disabled = false; input.focus(); scroll(); }
 }
 
@@ -699,13 +713,13 @@ function openPlan() {
     go.disabled = true;
     out.replaceChildren(el('p', 'thinking', t.building));
     try {
-      const data = await (await post('/api/plan', { text, profile, lang })).json();
+      const data = await postJson('/api/plan', { text, profile, lang });
       out.textContent = '';
       if (data.crisis) return showCrisis(out);
-      if (data.error) return out.append(errText(data.error));
+      if (data.error) return out.append(...helpErr(data.error));
       renderPlan(out, data, generate);
     } catch {
-      out.replaceChildren(el('p', 'err', S().offline));
+      out.replaceChildren(...helpErr(S().offline));
     } finally { go.disabled = false; }
   }
   go.onclick = () => generate();
@@ -820,12 +834,12 @@ async function startRec() {
   const r = rec = { stop: false };
   try { r.stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
   catch { rec = null; return showNote(S().micDenied, true); }
-  if (r.stop) { r.stream.getTracks().forEach((tr) => tr.stop()); rec = null; return; } // released while the permission prompt was up
+  if (r.stop) { r.stream.getTracks().forEach((tr) => tr.stop()); rec = null; return showNote(S().micTap); } // released while the permission prompt was up
   const chunks = [], m = r.m = new MediaRecorder(r.stream), started = Date.now();
   m.ondataavailable = (e) => chunks.push(e.data);
   m.onstop = async () => {
     r.stream.getTracks().forEach((tr) => tr.stop()); rec = null; micBtn.classList.remove('rec'); showNote(photo && S().photoHint);
-    if (Date.now() - started < 600) return; // a tap, not a question
+    if (Date.now() - started < 600) return showNote(S().micTap); // a tap, not a question: say how it works
     let wav;
     try { wav = await toWav(new Blob(chunks, { type: m.mimeType })); } catch { return showNote(S().micBad, true); }
     ask(input.value, wav);
@@ -848,7 +862,7 @@ micBtn.onkeyup = (e) => { if (e.key === ' ' || e.key === 'Enter') stopRec(); };
 // Wellbeing page: breathe → book a counsellor → talk to a senior. Nothing here is sent or stored.
 // wellbeing:pure-start (test.js runs this block, so keep it free of DOM code)
 // Copy of CRISIS in lib/shared.js; test.js fails if they drift apart.
-const CRISIS_CLIENT = /suicid|kill my ?self|\bend (my life|it all)\b|want to die|wanna die|don'?t want to (live|be alive)|no reason to live|self[- ]?harm|hurt (my ?self)|cut(ting)? myself|自杀|自殺|想死|不想活|轻生|结束生命|bunuh diri|tự tử|자살|ฆ่าตัวตาย|आत्महत्या|தற்கொலை|magpakamatay/i;
+const CRISIS_CLIENT = /suicid|kill my ?self|\bend (my life|it all)\b|want to die|wanna die|don'?t want to (live|be alive)|no reason to live|self[- ]?harm|hurt (my ?self)|cut(ting)? myself|\bkms\b|unalive|end myself|overdose|jump off|自杀|自殺|想死|不想活|轻生|结束生命|跳楼|割腕|活不下去|bunuh diri|tự tử|자살|ฆ่าตัวตาย|आत्महत्या|தற்கொலை|magpakamatay/i;
 // SAMPLE profiles, made up for the demo. Not real students. No Law senior on purpose, so the "no match" message can be shown.
 const SENIORS = [
   { name: 'Linh', field: 'business', programme: 'Murdoch business', country: 'vn', langs: ['English', 'Tiếng Việt'], year: 3, avail: 'day', help: ['Group projects and presenting in English', '小组作业和英文演讲'] },

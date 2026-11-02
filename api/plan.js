@@ -36,7 +36,8 @@ ${JSON.stringify(KB.map(({ id, title, summary, steps, notes }) => ({ id, title, 
 const str = (v, n) => (v == null || v === '' ? null : String(v).slice(0, n));
 const bool = (v) => (typeof v === 'boolean' ? v : null);
 
-export function cleanProfile(p = {}) {
+export function cleanProfile(p) {
+  p ||= {}; // the model can send "profile": null
   return {
     programme: str(p.programme, 80), home: str(p.home, 80), arrival: str(p.arrival, 20),
     under18: bool(p.under18), accommodation: str(p.accommodation, 80), studentPass: bool(p.studentPass),
@@ -71,7 +72,8 @@ export function programmeContact(programme) {
 }
 
 // Unknown ids are dropped; contact, source and checked date come from knowledge.json; links the KB doesn't contain are removed.
-export function toPlan(out = {}) {
+export function toPlan(out) {
+  out ||= {};
   const profile = cleanProfile(out.profile);
   const sections = (Array.isArray(out.sections) ? out.sections : []).slice(0, 3).map((s) => ({
     title: str(s?.title, 60) || '',

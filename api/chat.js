@@ -44,9 +44,9 @@ export const pickLang = (l) => (l === 'zh' ? 'zh' : 'en');
 
 // Contacts, sources and review dates always come from the knowledge base, never from the model.
 // Card titles use title_zh in 中文 mode; approved review entries have none and stay English.
-export function toCards(matches = [], byId, lang = 'en') {
-  return matches
-    .filter((m) => byId[m.id])
+export function toCards(matches, byId, lang = 'en') {
+  return (Array.isArray(matches) ? matches : [])
+    .filter((m) => m && byId[m.id])
     .slice(0, 3)
     .map((m) => {
       const e = byId[m.id];
@@ -56,6 +56,31 @@ export function toCards(matches = [], byId, lang = 'en') {
         notes: (m.notes && String(m.notes)) || e.notes, contact: e.contact, source: e.source, reviewed: e.reviewed, sample: e.sample, approved: e.approved,
       };
     });
+}
+
+// AI-busy fallback: plain keyword match on keywords, title words and Chinese title bigrams. No model, so no quota.
+// ponytail: substring scoring, no stemming beyond a plural "s"; good enough to surface the right page for short questions.
+const STOP = /^(your|when|with|using|what|which|from|that|this|have|kaplan|student|students|services|university|next)$/;
+const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const bigrams = (s) => [...new Set([...String(s || '').matchAll(/(?=([一-鿿]{2}))/g)].map((x) => x[1]))];
+export function kbMatch(message, kb) {
+  const m = String(message || '').toLowerCase();
+  const has = (w) => new RegExp(`(^|[^a-z0-9])${esc(w)}(e?s)?($|[^a-z0-9])`).test(m);
+  return kb.map((e) => {
+    const title = [...new Set(String(e.title || '').toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 3 && !STOP.test(w)))];
+    const score = 2 * (e.keywords || []).filter((k) => has(String(k).toLowerCase())).length
+      + 3 * title.filter(has).length + 2 * bigrams(e.title_zh).filter((b) => m.includes(b)).length;
+    return { e, score };
+  }).filter((x) => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 3).map((x) => x.e);
+}
+const BUSY = {
+  en: 'The AI is busy right now, so here are the closest Kaplan pages. Check the steps against the source.',
+  zh: 'AI 现在比较忙，以下是最相关的 Kaplan 页面。请对照来源核对步骤。',
+};
+// null when nothing matches: the caller sends the plain busy error.
+export function busyAnswer(message, kb, byId, lang) {
+  const hits = kbMatch(message, kb);
+  return hits.length ? { reply: BUSY[pickLang(lang)], cards: toCards(hits.map((e) => ({ id: e.id })), byId, lang), busy: true } : null;
 }
 
 // Photos and voice clips arrive as data URLs. Checked here, at the trust boundary; never logged or stored.
@@ -162,7 +187,10 @@ export default async function handler(req, res) {
   const messages = [{ role: 'system', content: system(kb) }, ...history, { role: 'user', content: turn(text) }];
   const demo = body.demoFail === true;
   const { out, error } = await callModel(demo ? [...messages.slice(0, -1), { role: 'user', content: turn(text + DEMO_FAIL) }] : messages);
-  if (error) return send(res, 502, { error });
+  if (error) {
+    const fallback = busyAnswer(message, kb, byId, lang);
+    return fallback ? send(res, 200, fallback) : send(res, 502, { error });
+  }
   const seen = image || audio ? String(out.seen || '') : '';
   // Keyword check again on what the model read or heard: words in a photo or voice clip skipped the first check.
   if (out.crisis || isCrisis(seen)) return send(res, 200, { crisis: true });

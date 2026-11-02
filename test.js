@@ -1,14 +1,18 @@
 // `node test.js`: checks the crisis filter and that every knowledge-base entry is complete.
 import assert from 'node:assert';
 import { readFileSync } from 'node:fs';
-import { cleanFeedback, knowledge, toCards, validMedia, checkerInput, cleanCheck, contain } from './api/chat.js';
-import { isCrisis, CRISIS, saveQueue, getQueue } from './lib/shared.js';
+import { cleanFeedback, knowledge, toCards, validMedia, checkerInput, cleanCheck, contain, kbMatch, busyAnswer } from './api/chat.js';
+import { isCrisis, CRISIS, saveQueue, getQueue, modelList } from './lib/shared.js';
 import { cleanEntry, cleanFlags } from './api/review.js';
-import { toPlan, programmeContact } from './api/plan.js';
+import { toPlan, programmeContact, cleanProfile } from './api/plan.js';
 import { checkEmail, checkDate, checkTime, mailto, buildIcs, runTool } from './api/act.js';
 
 for (const s of ['I want to kill myself', 'thinking about suicide', "I don't want to live anymore", '我想自杀', '我不想活了', 'saya mau bunuh diri', 'I want to end it all'])
   assert(isCrisis(s), `should flag: ${s}`);
+for (const s of ['ugh kms', 'KMS.', 'I want to unalive myself', 'I want to end myself', 'thinking of an overdose', 'gonna jump off the roof', '我想跳楼', '我想割腕', '我活不下去了'])
+  assert(isCrisis(s), `should flag: ${s}`);
+for (const s of ['bookmarks', 'I walked 5kms today', 'open the kmsg log', 'how do I switch campuses'])
+  assert(!isCrisis(s), `kms only as a word: ${s}`);
 for (const s of ['how do I send my assignment', 'this exam will kill me lol', 'when does the term end', 'I feel stressed about exams', "i'm a bit stressed", 'so tired and overwhelmed', 'I feel lonely here', 'dying to know my results','how to withdraw from a module'])
   assert(!isCrisis(s), `should NOT flag: ${s}`);
 
@@ -79,7 +83,22 @@ assert(card.approved === true && card.reviewed === '2026-11-02', 'approved card 
 const [zhCard, zhApproved] = toCards([{ id: 'counselling' }, { id: 'approved-a1' }], merged.byId, 'zh');
 assert(zhCard.title === kb[0].title_zh && zhApproved.title === 'Print on campus', 'zh card titles: title_zh, approved entries keep English');
 assert(toCards([{ id: 'counselling' }], merged.byId, 'xx')[0].title === kb[0].title, 'unknown lang falls back to English title');
+// Model output that isn't the expected shape never crashes the handler.
+for (const g of [null, undefined, 'x', {}, [null, 42, { id: 'made-up' }]]) assert.deepStrictEqual(toCards(g, merged.byId), [], `toCards safe on ${JSON.stringify(g)}`);
+assert(cleanProfile(null).programme === null && toPlan(null).sections.length === 0 && toPlan({ profile: null, sections: null, missing: null }).missing.length === 0, 'null profile/plan safe');
+
+// AI-busy fallback: keyword match, approved entries included, reply follows lang.
+assert(kbMatch('how do I apply for leave? I have an MC', merged.kb)[0].id === 'leave' && kbMatch('我想请假', merged.kb)[0].id === 'leave', 'busy match en + zh');
+assert(kbMatch('Book a counselling session', merged.kb)[0].id === 'counselling' && kbMatch('how do I print my notes', merged.kb)[0].id === 'approved-a1', 'topic title and approved entry');
+assert(kbMatch('xyzzy', merged.kb).length === 0 && kbMatch('', merged.kb).length === 0 && kbMatch('contact email phone', merged.kb).length === 3, 'no match empty, max 3');
+const busy = busyAnswer('怎么预约心理辅导', merged.kb, merged.byId, 'zh');
+assert(busy.busy && busy.reply.startsWith('AI') && busy.cards[0].title === kb[0].title_zh && busy.cards[0].contact === kb[0].contact, 'busy answer: zh reply, KB card');
+assert(busyAnswer('apply for leave', merged.kb, merged.byId, 'en').reply.startsWith('The AI is busy') && busyAnswer('xyzzy', merged.kb, merged.byId, 'en') === null, 'busy answer: en, null when no match');
 await saveQueue([]);
+
+// Quota insurance: LLM_FALLBACK_MODEL can be a comma list.
+assert.deepStrictEqual(modelList(undefined, undefined), ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'], 'default models');
+assert.deepStrictEqual(modelList('m', ' a, ,b ,'), ['m', 'a', 'b'], 'comma list trimmed, empties dropped');
 
 // Make It Fail: checker input, verdict normalising, containment.
 const leaveKb = kb.find((e) => e.id === 'leave');
