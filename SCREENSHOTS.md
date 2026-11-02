@@ -28,8 +28,8 @@ Two kinds: screens from Kaplan360, the LMS and the uni portals, which need a log
 14. 5–10 real freshman questions from class or batch group chats (blur all names and numbers)
 15. KampusCare start screen in 中文 (header switched to 中文)
 16. KampusCare arrival plan, showing the "What we understood about you" block and the first section
-17. KampusCare review.html with a draft and its flags unticked, so Approve is greyed out (use a demo question, no student text)
-18. KampusCare chat answer with the "Approved by Student Services · date" badge
+17. KampusCare while recording: mic held, red dot and "Listening… release to send" with the seconds counter
+18. KampusCare voice answer: "You said: …" and the counselling card
 19. KampusCare start screen scrolled to the Contacts group
 
 ## Soon: makes the bot much more useful (20–38)

@@ -1,11 +1,9 @@
 // `node test.js`: checks the crisis filter and that every knowledge-base entry is complete.
 import assert from 'node:assert';
 import { readFileSync } from 'node:fs';
-import { cleanFeedback, knowledge, toCards, validMedia, checkerInput, cleanCheck, contain, kbMatch, busyAnswer } from './api/chat.js';
-import { isCrisis, CRISIS, saveQueue, getQueue, modelList } from './lib/shared.js';
-import { cleanEntry, cleanFlags } from './api/review.js';
+import { cleanFeedback, toCards, validMedia, kbMatch, busyAnswer } from './api/chat.js';
+import { isCrisis, CRISIS, modelList, byId } from './lib/shared.js';
 import { toPlan, programmeContact, cleanProfile } from './api/plan.js';
-import { checkEmail, checkDate, checkTime, mailto, buildIcs, runTool } from './api/act.js';
 
 for (const s of ['I want to kill myself', 'thinking about suicide', "I don't want to live anymore", '我想自杀', '我不想活了', 'saya mau bunuh diri', 'I want to end it all'])
   assert(isCrisis(s), `should flag: ${s}`);
@@ -58,89 +56,24 @@ for (const e of kb.filter((e) => e.group === 'Contacts' && e.id !== 'student-ser
   assert(/\b\d{4} ?\d{4}\b/.test(e.steps.join(' ')) && e.steps.join(' ').includes('@kaplan.com'), `${e.id}: needs a phone and a @kaplan.com email`);
 assert(programmeContact(null).includes('6733 1877') && toPlan({}).sections.length === 0, 'empty model output is safe');
 
-// Review queue: server-side flags, entry validation, and only approved answers reach chat.
-const flagNames = (fl) => fl.map((f) => f.flag).sort();
-let fl = cleanFlags([{ flag: 'conflicts_with:not-real', reason: 'x', confidence: 90 }, { flag: 'conflicts_with:counselling', reason: 'differs', confidence: 250 }, { flag: 'made_up' }],
-  'Printing costs 10 cents a page.', 'how do I print?', {});
-assert.deepStrictEqual(flagNames(fl), ['conflicts_with:counselling', 'no_source'], 'unknown conflict dropped, no_source added');
-assert(fl.find((f) => f.flag === 'conflicts_with:counselling').confidence === 100, 'confidence clamped');
-fl = cleanFlags([], 'See https://kaplan.edu.sg/x. Withdrawal needs a form.', 'how do I leave my course', {});
-assert.deepStrictEqual(flagNames(fl), ['policy_sensitive'], 'policy keyword flagged, URL means no no_source');
-
-assert(cleanEntry({ title: '', steps: ['a'] }).error && cleanEntry({ title: 'Print', steps: [' ', ''] }).error, 'title and a step required');
-const ce = cleanEntry({ title: '  Print on campus ', steps: 'Go to library\n\nTap card', source: 'javascript:alert(1)', notes: 'n'.repeat(900) });
-assert(!ce.error && ce.entry.title === 'Print on campus' && ce.entry.steps.length === 2 && ce.entry.source === '' && ce.entry.notes.length === 500 && ce.entry.contact, 'entry cleaned');
-
-await saveQueue([
-  { id: 'p1', question: 'pending?', status: 'pending', created: '2026-11-01T00:00:00Z' },
-  { id: 'r1', question: 'rejected?', status: 'rejected', created: '2026-11-01T00:00:00Z' },
-  { id: 'a1', question: 'print?', status: 'approved', created: '2026-11-01T00:00:00Z', decided: '2026-11-02', entry: { ...ce.entry, group: 'Approved by Student Services' } },
-]);
-const merged = await knowledge();
-assert(merged.byId['approved-a1'] && !merged.byId['approved-p1'] && !merged.byId['approved-r1'] && merged.kb.length === kb.length + 1, 'only approved entries merged');
-const [card] = toCards([{ id: 'approved-a1', why: 'w' }], merged.byId);
-assert(card.approved === true && card.reviewed === '2026-11-02', 'approved card badge data');
-const [zhCard, zhApproved] = toCards([{ id: 'counselling' }, { id: 'approved-a1' }], merged.byId, 'zh');
-assert(zhCard.title === kb[0].title_zh && zhApproved.title === 'Print on campus', 'zh card titles: title_zh, approved entries keep English');
-assert(toCards([{ id: 'counselling' }], merged.byId, 'xx')[0].title === kb[0].title, 'unknown lang falls back to English title');
+const [zhCard] = toCards([{ id: 'counselling' }], byId, 'zh');
+assert(zhCard.title === kb[0].title_zh, 'zh card titles: title_zh');
+assert(toCards([{ id: 'counselling' }], byId, 'xx')[0].title === kb[0].title, 'unknown lang falls back to English title');
 // Model output that isn't the expected shape never crashes the handler.
-for (const g of [null, undefined, 'x', {}, [null, 42, { id: 'made-up' }]]) assert.deepStrictEqual(toCards(g, merged.byId), [], `toCards safe on ${JSON.stringify(g)}`);
+for (const g of [null, undefined, 'x', {}, [null, 42, { id: 'made-up' }]]) assert.deepStrictEqual(toCards(g, byId), [], `toCards safe on ${JSON.stringify(g)}`);
 assert(cleanProfile(null).programme === null && toPlan(null).sections.length === 0 && toPlan({ profile: null, sections: null, missing: null }).missing.length === 0, 'null profile/plan safe');
 
-// AI-busy fallback: keyword match, approved entries included, reply follows lang.
-assert(kbMatch('how do I apply for leave? I have an MC', merged.kb)[0].id === 'leave' && kbMatch('我想请假', merged.kb)[0].id === 'leave', 'busy match en + zh');
-assert(kbMatch('Book a counselling session', merged.kb)[0].id === 'counselling' && kbMatch('how do I print my notes', merged.kb)[0].id === 'approved-a1', 'topic title and approved entry');
-assert(kbMatch('xyzzy', merged.kb).length === 0 && kbMatch('', merged.kb).length === 0 && kbMatch('contact email phone', merged.kb).length === 3, 'no match empty, max 3');
-const busy = busyAnswer('怎么预约心理辅导', merged.kb, merged.byId, 'zh');
+// AI-busy fallback: keyword match, reply follows lang.
+assert(kbMatch('how do I apply for leave? I have an MC', kb)[0].id === 'leave' && kbMatch('我想请假', kb)[0].id === 'leave', 'busy match en + zh');
+assert(kbMatch('Book a counselling session', kb)[0].id === 'counselling', 'topic title');
+assert(kbMatch('xyzzy', kb).length === 0 && kbMatch('', kb).length === 0 && kbMatch('contact email phone', kb).length === 3, 'no match empty, max 3');
+const busy = busyAnswer('怎么预约心理辅导', kb, byId, 'zh');
 assert(busy.busy && busy.reply.startsWith('AI') && busy.cards[0].title === kb[0].title_zh && busy.cards[0].contact === kb[0].contact, 'busy answer: zh reply, KB card');
-assert(busyAnswer('apply for leave', merged.kb, merged.byId, 'en').reply.startsWith('The AI is busy') && busyAnswer('xyzzy', merged.kb, merged.byId, 'en') === null, 'busy answer: en, null when no match');
-await saveQueue([]);
+assert(busyAnswer('apply for leave', kb, byId, 'en').reply.startsWith('The AI is busy') && busyAnswer('xyzzy', kb, byId, 'en') === null, 'busy answer: en, null when no match');
 
 // Quota insurance: LLM_FALLBACK_MODEL can be a comma list.
 assert.deepStrictEqual(modelList(undefined, undefined), ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'], 'default models');
 assert.deepStrictEqual(modelList('m', ' a, ,b ,'), ['m', 'a', 'b'], 'comma list trimmed, empties dropped');
-
-// Make It Fail: checker input, verdict normalising, containment.
-const leaveKb = kb.find((e) => e.id === 'leave');
-const bad = toCards([{ id: 'leave', why: 'w', steps: ['Open Kaplan360.', 'Submit within 10 working days.'], notes: 'n' }, { id: 'counselling', why: 'c', steps: ['ok'] }], merged.byId);
-const ci = checkerInput('Hi', bad, merged.byId);
-assert(ci.reply === 'Hi' && ci.answers.length === 2 && ci.answers[0].answer.steps[1].includes('10') && String(ci.answers[0].kb.steps) === String(leaveKb.steps) && !('source' in ci.answers[0].kb), 'checker input: only matched entries');
-for (const g of [undefined, null, 'garbage', {}, { ok: 'nope' }, { ok: false }, { ok: false, problems: 'x' }, { ok: false, problems: [{ id: 'made-up', field: 'steps[0]' }] }])
-  assert.deepStrictEqual(cleanCheck(g, ['leave']), { ok: true, problems: [] }, `garbage passes: ${JSON.stringify(g)}`);
-const verdict = cleanCheck({ ok: false, problems: [{ id: 'leave', field: 'steps[1]', wrong: '10 working days', kb_says: '5 working days', reason: 'r' }, { id: 'nope', field: 'notes' }] }, ['leave', 'counselling']);
-assert(cleanCheck({ ok: false, problems: [{ id: 'leave', field: 'reply', type: 'dropped' }, { id: 'leave', field: 'why', type: 'dropped' }] }, ['leave']).ok, 'omissions in reply/why ignored');
-assert(!cleanCheck({ ok: false, problems: [{ id: 'leave', field: 'notes', type: 'dropped' }] }, ['leave']).ok, 'dropped caveat in notes kept');
-assert(!verdict.ok && verdict.problems.length === 1 && verdict.problems[0].kb_says === '5 working days', 'unknown ids dropped');
-const held = contain('Hi', bad, verdict.problems, merged.byId);
-assert(String(held.cards[0].steps) === String(leaveKb.steps) && held.cards[0].notes === leaveKb.notes && held.cards[0].why === '' && held.cards[1].steps[0] === 'ok' && held.reply === 'Hi', 'bad card back to KB steps, good card kept');
-const noReply = contain('Call 9999', bad, [{ id: 'leave', field: 'reply' }], merged.byId);
-assert(noReply.reply === '' && noReply.cards[0].steps[1].includes('10'), 'bad reply dropped, cards kept');
-
-// Make It Act: tool-arg validators, .ics and mailto builders.
-assert(checkEmail('Merlinda.Tan@kaplan.com').team.id === 'contact-murdoch', 'KB email accepted, mapped to its Contacts team');
-for (const bad of ['someone@gmail.com', 'merlinda.tan@kaplan.com.evil.com', '', undefined]) assert.throws(() => checkEmail(bad), `rejects email: ${bad}`);
-assert(checkDate('2026-11-05', '2026-11-02') === '2026-11-05' && checkDate('2027-11-02', '2026-11-02'), 'date within 12 months');
-for (const bad of ['2026-11-01', '2027-11-03', '2026-02-30', '5 Nov', '2026-11-5', null]) assert.throws(() => checkDate(bad, '2026-11-02'), `rejects date: ${bad}`);
-assert(checkTime('09:30') === '09:30' && checkTime(undefined) === '', 'time HH:MM or empty');
-assert.throws(() => checkTime('9pm'), 'rejects time 9pm');
-await assert.rejects(runTool('draft_email', { to: 'kfd.sg@kaplan.com', subject: 'x'.repeat(151), body: 'b' }), /too long/, 'subject length');
-await assert.rejects(runTool('draft_email', { to: 'kfd.sg@kaplan.com', subject: 's', body: ' ' }), /required/, 'empty body');
-await assert.rejects(runTool('make_checklist', { title: 't', items: Array(11).fill('x') }), /1 to 10/, 'checklist cap');
-await assert.rejects(runTool('draft_email', { to: 'kfd.sg@kaplan.com', subject: 's', body: 'ID S1234567A' }, { question: 'help' }), /NRIC/, 'invented ID rejected');
-await assert.rejects(runTool('delete_everything', {}), /Unknown tool/, 'unknown tool');
-const em = await runTool('draft_email', { to: 'merlinda.tan@kaplan.com', subject: 'Leave & MC?', body: 'Hi,\\nI am sick.' }, { lang: 'zh' });
-assert(em.team === 'Murdoch University 学生服务' && em.body === 'Hi,\nI am sick.', 'zh team name, double-escaped newline fixed');
-assert(mailto('a@kaplan.com', 'Leave & MC?', 'Hi,\n我病了 #1') === 'mailto:a@kaplan.com?subject=Leave%20%26%20MC%3F&body=Hi%2C%0D%0A%E6%88%91%E7%97%85%E4%BA%86%20%231', 'mailto encoding, CRLF line breaks');
-const ics = buildIcs({ title: 'Submit MC; on Kaplan360, now', date: '2026-12-31', time: '', notes: '提交病假单'.repeat(20) + '\nline 2' }, new Date('2026-11-02T01:02:03Z'));
-assert(ics.startsWith('BEGIN:VCALENDAR\r\n') && ics.endsWith('END:VCALENDAR\r\n'), 'ics wrapper, CRLF');
-assert(ics.includes('DTSTART;VALUE=DATE:20261231\r\nDTEND;VALUE=DATE:20270101') && ics.includes('DTSTAMP:20261102T010203Z'), 'all-day dates, rolls over the year');
-assert(ics.includes('SUMMARY:Submit MC\\; on Kaplan360\\, now') && ics.replace(/\r\n /g, '').includes('\\nline 2'), 'ics text escaped');
-assert(ics.split('\r\n').every((l) => Buffer.byteLength(l) <= 75), 'lines folded to 75 octets');
-assert(buildIcs({ title: 't', date: '2026-11-05', time: '09:30' }).includes('DTSTART:20261105T093000\r\nDURATION:PT30M'), 'timed reminder');
-const q = await runTool('send_to_student_services', { question: 'Can I bring my dog?' });
-assert(q.queued && (await getQueue()).at(-1).question === q.question, 'queued via review.js');
-await assert.rejects(runTool('send_to_student_services', { question: 'x'.repeat(301) }), /too long/, 'queue question max 300');
-await saveQueue([]);
 
 // Wellbeing: index.html stays one file, so run its marked pure block here.
 const html = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
@@ -167,4 +100,4 @@ assert(homeCountry(null, names) === 'other' && homeCountry('Kenya', names) === '
 assert(matchSeniors(SENIORS, 'business', 'vn')[0].name === 'Linh' && matchSeniors(SENIORS, 'law', 'sg').length === 0, 'real sample data');
 assert((html.match(/noMatch: '/g) || []).length === 2, 'friendly no-match message in en and zh');
 
-console.log(`ok: crisis filter, plan filter, review queue, make-it-fail checker, make-it-act tools, wellbeing matching + ${kb.length} knowledge entries`);
+console.log(`ok: crisis filter, plan filter, busy fallback, wellbeing matching + ${kb.length} knowledge entries`);

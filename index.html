@@ -46,10 +46,7 @@
   .notes { font-size:14px; color:var(--muted); margin:0 0 8px; }
   .meta { font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
   .sample { display:inline-block; margin:0 0 6px; padding:1px 7px; border-radius:3px; background:var(--warn-bg); color:var(--warn); font-size:12px; font-weight:600; }
-  .approved { display:inline-block; margin:0 0 6px; padding:1px 7px; border-radius:3px; background:var(--accent-bg); color:var(--accent); font-size:12px; font-weight:600; }
   .none { color:var(--muted); }
-  .offer { margin:8px 0 0; }
-  .offer .meta { margin:4px 0 0; }
   .fb { font-size:13px; color:var(--muted); margin:4px 0 0; }
   .fb button { font:inherit; font-size:13px; background:none; border:1px solid var(--rule); border-radius:4px; padding:1px 10px; margin-left:6px; cursor:pointer; color:var(--ink); }
   .fb button:hover { border-color:var(--ink); }
@@ -100,7 +97,13 @@
   /* Surprise feature 3: photo and voice */
   form .icon { flex:none; width:44px; padding:0; display:grid; place-items:center; background:#fff; color:var(--ink); border:1px solid #cfcbc1; touch-action:none; -webkit-user-select:none; user-select:none; }
   form .icon:hover { border-color:var(--ink); }
-  form .icon.rec { color:#fff; background:var(--red); border-color:var(--red); }
+  /* Voice leads (laptop demo): mic in accent outline, camera quieter. */
+  form #mic { color:var(--accent); border:2px solid var(--accent); }
+  form #photo-btn { color:var(--muted); border-color:var(--rule); }
+  form #mic.rec { color:#fff; background:var(--red); border-color:var(--red); }
+  #note.live { color:var(--red); font-size:14px; font-weight:600; font-variant-numeric:tabular-nums; }
+  #note.live::before { content:""; display:inline-block; width:10px; height:10px; margin-right:8px; border-radius:50%; background:var(--red); animation:blink 1s ease-in-out infinite; }
+  @keyframes blink { 50% { opacity:.2; } }
   form .icon[hidden], .thumb[hidden] { display:none; }
   .thumb { position:relative; flex:none; }
   .thumb img { display:block; width:48px; height:48px; object-fit:cover; border-radius:6px; border:1px solid var(--rule); }
@@ -108,18 +111,8 @@
   .shot { display:block; max-width:180px; max-height:180px; margin:28px 0 0; border-radius:6px; border:1px solid var(--rule); }
   .shot + .me { margin-top:8px; }
   .seen { margin:0 0 6px; font-size:14px; color:var(--muted); }
-  .check { margin:0 0 12px; font-size:13px; color:var(--muted); }
-  .check.caught { padding:8px 10px; border-radius:4px; background:var(--warn-bg); color:var(--warn); }
-  .check ul { margin:4px 0 0; padding-left:18px; }
-  /* Surprise feature 5: Make It Act */
-  .act { margin:0 0 14px; padding:10px 14px; border-left:3px solid var(--accent); background:#fff; }
-  .act h4 { margin:2px 0 6px; font-size:15px; }
-  .act .chose { font-size:12px; color:var(--accent); font-weight:600; font-family:ui-monospace,monospace; }
-  .act .mail { white-space:pre-wrap; font-size:14px; margin:0 0 8px; padding:8px 10px; background:var(--paper); border:1px solid var(--rule); border-radius:4px; }
-  .act .items > li { display:block; }
-  .act .items input { margin-right:8px; accent-color:var(--accent); }
   /* Wellbeing: breathe → book a counsellor → talk to a senior */
-  #plan-open { margin-bottom:12px; }
+  #plan-open { margin-bottom:12px; padding:18px 22px; border-left-width:5px; background:var(--accent-bg); font-size:clamp(17px,2.4vw,20px); }
   .wb-link { display:block; background:none; border:0; padding:0; margin:-8px 0 14px 21px; font:inherit; font-size:14px; color:var(--accent); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
   .breath { display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center; }
   /* Waves inside a circle: the water level (.level) rises on breathe-in and drains on breathe-out; --d is the current phase length. */
@@ -178,7 +171,7 @@
   @keyframes pulse { from { transform:scale(.9); opacity:1; } to { transform:scale(1.3); opacity:0; } }
   @media (prefers-reduced-motion: reduce) {
     .wave, .in .bubble, .pulse, .fade { animation:none; } /* the water level still rises and drains */
-    .tap::after { animation:none; }
+    .tap::after, #note.live::before { animation:none; }
   }
   .demo-banner { margin:0 0 12px; padding:8px 10px; border-radius:4px; background:var(--warn-bg); color:var(--warn); font-size:14px; }
   .profile textarea { display:block; width:100%; margin-top:4px; font-size:16px; }
@@ -218,9 +211,9 @@
   <div>
     <!-- No "capture" attribute, so phones offer both the camera and the gallery. -->
     <input type="file" id="photo" accept="image/*" hidden>
+    <button type="button" class="icon" id="mic" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
     <button type="button" class="icon" id="photo-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13.5" r="3.5"/></svg></button>
     <span class="thumb" id="thumb" hidden><img alt=""><button type="button" id="unphoto">✕</button></span>
-    <button type="button" class="icon" id="mic" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
     <textarea id="input" rows="1" maxlength="1000"></textarea>
     <button id="send"></button>
   </div>
@@ -233,40 +226,29 @@
 const STRINGS = {
   en: {
     headline: 'How do I do this at Kaplan?',
-    stance: "Ask in your own words, in any language. KampusCare only answers from the Kaplan pages listed below. If your question isn't covered, it tells you who to ask instead of guessing. Type, snap a photo, or hold the mic to ask by voice.",
-    composerHint: '📷 Photo or hold 🎤 the mic to talk.', micTap: 'Hold the mic button while you talk.',
+    stance: "Ask in your own words, in any language. KampusCare only answers from the Kaplan pages listed below. If your question isn't covered, it tells you who to ask instead of guessing. Type, or hold the mic and just ask. You can add a photo too.",
+    composerHint: '🎤 Hold the mic (or Space on it) to talk. 📷 Photo optional.', micTap: 'Hold the mic button while you talk.',
     danger: 'In danger right now? Tap Urgent help at the top.',
     planOpen: 'New international student? ', planOpenCta: 'Get your first 2 weeks planned →',
     groups: {},
     provenance: (n, date, unverified) => `${n} topics from the Kaplan Singapore Student Handbook and contact list, last checked ${date}. ${unverified} still have Kaplan360 or LMS steps waiting to be confirmed by students.`,
     placeholder: 'e.g. how do I apply for leave?', inputLabel: 'Your question', ask: 'Ask',
-    allTopics: '← All topics', urgent: 'Urgent help',
+    allTopics: '← Home', urgent: 'Urgent help',
     footer: "AI-assisted (Google Gemini). Don't type your name, student ID or medical details. Check anything important with Student Services.",
     thinking: 'Checking the Kaplan handbook…',
-    notCovered: "That isn't in KampusCare's Kaplan pages yet. Kaplan general enquiries: +65 6733 1877.",
-    sendReview: 'Send this question to Student Services', privacy: 'Only your question is sent, no name or ID.',
-    sent: 'Sent. Once Student Services approves an answer, KampusCare will be able to answer this.',
+    notCovered: 'Not covered yet. Ask your Student Services team:',
     fbAsk: 'Did this answer it?', yes: 'Yes', no: 'No', thanks: 'Thanks.', thanksDown: 'Thanks. Student Services: +65 6733 1877.',
     whatWrong: 'What went wrong?', reasons: { not_asked: 'Not what I asked for', incorrect: 'Incorrect/incomplete', slow: 'Slow/buggy' },
     others: 'Others', tellMore: 'Tell us more (optional)', send: 'Send',
-    sample: 'App steps not yet confirmed', unverified: 'steps unverified', approved: (date) => `Approved by Student Services · ${date}`,
+    sample: 'App steps not yet confirmed', unverified: 'steps unverified',
     checked: 'checked', source: 'source',
     offline: "Couldn't reach KampusCare. Check your connection and try again.",
     serverErrors: {},
-    act: {
-      doIt: 'Do it for me', working: 'Working on it…', chose: 'AI chose', none: 'Nothing to do automatically here.',
-      email: (team) => `Drafted an email to ${team}`, to: 'To', subject: 'Subject', openMail: 'Open in my email app',
-      mailNote: "Fill in the [placeholders], then send it yourself. Nothing is sent automatically.",
-      reminder: (when) => `Made a reminder for ${when}`, addCal: 'Add to my calendar (.ics)',
-      queued: 'Sent your question to Student Services', checklist: (title) => `Made a checklist: ${title}`,
-    },
     photo: 'Add a photo or screenshot', removePhoto: 'Remove photo', defaultQ: 'What does this mean and what should I do?',
     photoHint: "Crop out your name, student ID and photo before sending. KampusCare doesn't keep your photo or voice clip; Google's Gemini reads it to answer.",
     photoTooBig: 'That photo is still too large after shrinking. Try cropping it or sending a screenshot.', photoBad: "That file couldn't be opened as a photo.",
     seen: 'In your photo: ', heard: 'You said: ', voiceMsg: '🎤 Voice message',
-    check: { passed: '✓ Checked against the Kaplan pages by a second AI', fixed: 'Caught and fixed by a second AI:', contained: "Couldn't verify the AI's wording, so here are the original Kaplan steps.",
-      caught: (where, wrong, kb) => `${where} said "${wrong}"; the Kaplan page says ${kb}.`, step: (n) => `step ${n}`, demo: 'Demo: mistake injected' },
-    mic: 'Hold to ask by voice (up to 30 seconds)', recording: 'Recording… release to send.',
+    mic: 'Hold to ask by voice (up to 30 seconds)', recording: (n) => `Listening… release to send · ${n}s`,
     micDenied: "Couldn't use the microphone. Check your browser's permission and try again.", micBad: "Couldn't read that recording. Please try again.",
     crisis: {
       title: "You don't have to go through this alone",
@@ -324,23 +306,21 @@ const STRINGS = {
   },
   zh: {
     headline: '在 Kaplan，这件事怎么办？',
-    stance: '用你自己的话提问，任何语言都可以。KampusCare 只根据下面列出的 Kaplan 页面回答。如果你的问题不在范围内，它会告诉你该找谁，而不是乱猜。可以打字、拍照，或按住麦克风用语音提问。',
-    composerHint: '📷 拍照，或按住 🎤 麦克风说话。', micTap: '说话时请一直按住麦克风按钮。',
+    stance: '用你自己的话提问，任何语言都可以。KampusCare 只根据下面列出的 Kaplan 页面回答。如果你的问题不在范围内，它会告诉你该找谁，而不是乱猜。可以打字，或按住麦克风直接说。也可以加一张照片。',
+    composerHint: '🎤 按住麦克风（或聚焦后按住空格）说话。📷 照片可选。', micTap: '说话时请一直按住麦克风按钮。',
     danger: '现在有危险？请点上方的“紧急求助”。',
     planOpen: '刚来新加坡的国际学生？', planOpenCta: '帮你规划头两周 →',
     groups: { 'Getting started': '入门须知', 'Classes and exams': '上课和考试', 'Money and admin': '费用和行政', 'Health and wellbeing': '健康与身心', 'Contacts': '联系方式' },
     provenance: (n, date, unverified) => `共 ${n} 个主题，来自 Kaplan Singapore 学生手册和联系人名单，最近核对于 ${date}。其中 ${unverified} 个的 Kaplan360 或 LMS 步骤还在等待学生确认。`,
     placeholder: '例如：怎么申请请假？', inputLabel: '你的问题', ask: '提问',
-    allTopics: '← 全部主题', urgent: '紧急求助',
+    allTopics: '← 首页', urgent: '紧急求助',
     footer: '由 AI 辅助（Google Gemini）。请不要输入你的姓名、学号或医疗信息。重要事项请向学生服务处确认。',
     thinking: '正在查阅 Kaplan 学生手册…',
-    notCovered: 'KampusCare 的 Kaplan 页面里暂时还没有这方面的内容。Kaplan 综合咨询：+65 6733 1877。',
-    sendReview: '把这个问题发送给学生服务处', privacy: '只会发送你的问题，不含姓名或学号。',
-    sent: '已发送。学生服务处审核通过答案后，KampusCare 就能回答这个问题了。',
+    notCovered: '暂时还没有这方面的内容。请咨询你的学生服务团队：',
     fbAsk: '这个回答有帮助吗？', yes: '有', no: '没有', thanks: '谢谢。', thanksDown: '谢谢。学生服务处：+65 6733 1877。',
     whatWrong: '哪里有问题？', reasons: { not_asked: '不是我想问的', incorrect: '不正确/不完整', slow: '太慢/有故障' },
     others: '其他', tellMore: '再多说一点（可选）', send: '发送',
-    sample: 'App 步骤尚未确认', unverified: '步骤未核实', approved: (date) => `学生服务处已审核 · ${date}`,
+    sample: 'App 步骤尚未确认', unverified: '步骤未核实',
     checked: '核对于', source: '来源',
     offline: '无法连接 KampusCare。请检查网络后再试。',
     // Server messages arrive in English; show the Chinese version when we have one.
@@ -348,25 +328,14 @@ const STRINGS = {
       'The AI is busy right now. Please try again in a minute.': 'AI 现在比较忙，请一分钟后再试。',
       'Something went wrong with the AI. Please try again.': 'AI 出了点问题，请再试一次。',
       'Tell us a little about yourself first.': '请先简单介绍一下你自己。',
-      'Student Services has a lot of questions right now. Please call +65 6733 1877.': '学生服务处目前收到的问题很多，请致电 +65 6733 1877。',
-      'The review queue is unavailable right now. Please try again.': '暂时无法提交，请稍后再试。',
       "That photo couldn't be read. Try a JPEG or PNG under 3 MB.": '无法读取这张照片。请用 3 MB 以内的 JPEG 或 PNG。',
       "That voice message couldn't be read. Keep it under 30 seconds.": '无法读取这条语音。请控制在 30 秒以内。',
-    },
-    act: {
-      doIt: '帮我办', working: '正在处理…', chose: 'AI 选择了', none: '这里没有可以自动完成的事。',
-      email: (team) => `已起草一封发给 ${team} 的邮件`, to: '收件人', subject: '主题', openMail: '在邮件 App 中打开',
-      mailNote: '请填好 [方括号] 里的内容，再由你自己发送。不会自动发送。',
-      reminder: (when) => `已创建提醒：${when}`, addCal: '添加到日历（.ics）',
-      queued: '已把你的问题发送给学生服务处', checklist: (title) => `已生成清单：${title}`,
     },
     photo: '添加照片或截图', removePhoto: '移除照片', defaultQ: '这是什么意思？我该怎么做？',
     photoHint: '发送前请裁掉你的姓名、学号和照片。KampusCare 不会保存你的照片或语音；Google 的 Gemini 会读取它来回答。',
     photoTooBig: '照片压缩后仍然太大。请裁剪一下，或改发截图。', photoBad: '无法把这个文件当作照片打开。',
     seen: '照片内容：', heard: '你说的是：', voiceMsg: '🎤 语音消息',
-    check: { passed: '✓ 已由第二个 AI 对照 Kaplan 页面核查', fixed: '第二个 AI 发现并更正了错误：', contained: '无法核实 AI 的表述，以下是 Kaplan 原始步骤（英文）。',
-      caught: (where, wrong, kb) => `${where}写的是“${wrong}”；Kaplan 页面写的是：${kb}。`, step: (n) => `第 ${n} 步`, demo: '演示：故意注入错误' },
-    mic: '按住用语音提问（最长 30 秒）', recording: '正在录音…松开即发送。',
+    mic: '按住用语音提问（最长 30 秒）', recording: (n) => `正在听…松开即发送 · ${n} 秒`,
     micDenied: '无法使用麦克风。请检查浏览器权限后再试。', micBad: '无法读取这段录音，请再试一次。',
     crisis: {
       title: '你不需要独自面对这一切',
@@ -523,6 +492,7 @@ langSel.onchange = () => {
 };
 applyLang();
 
+window.history.scrollRestoration = 'manual'; // "KampusCare" / "← Home" reload "/": a clean start screen, scrolled to the top
 const kbReady = fetch('/knowledge.json').then((r) => r.json()).then((data) => { kb = data; renderIndex(); }).catch(() => {});
 
 // Steps come from the model: build nodes, never innerHTML. "\n" = line break, https URLs = links.
@@ -541,7 +511,6 @@ function stepItem(text) {
 function answer(c) {
   const t = S(), d = el('div', 'answer');
   if (c.sample) d.append(el('span', 'sample', t.sample));
-  if (c.approved) d.append(el('span', 'approved', t.approved(fmtDate(c.reviewed))));
   d.append(el('h3', null, c.title));
   if (c.why) d.append(el('p', 'why', c.why));
   const ol = el('ol', 'steps'); c.steps.forEach((s) => ol.append(stepItem(s))); d.append(ol);
@@ -553,73 +522,11 @@ function answer(c) {
   return d;
 }
 
-// Surprise feature 2: students opt in to send an unanswered question for staff review. Never sent automatically.
-function offerReview(question) {
-  const t = S(), d = el('div', 'offer'), b = el('button', 'ghost', t.sendReview);
-  b.type = 'button';
-  d.append(b, el('p', 'meta', t.privacy));
-  b.onclick = async () => {
-    b.disabled = true;
-    try {
-      const data = await (await post('/api/review', { action: 'ask', question })).json();
-      d.textContent = '';
-      if (data.crisis) return showCrisis(d);
-      d.append(data.error ? errText(data.error) : el('p', 'notes', t.sent));
-    } catch { d.replaceChildren(el('p', 'err', t.offline)); }
-  };
-  return d;
-}
-
-// Surprise feature 5: the AI picks tools and the server runs them. Each card names the tool the AI chose.
-function doIt(question, id) {
-  const t = S().act, d = el('div', 'offer'), b = el('button', 'ghost', t.doIt);
-  b.type = 'button'; d.append(b);
-  b.onclick = async () => {
-    b.disabled = true; d.replaceChildren(el('p', 'thinking', t.working));
-    try {
-      const data = await postJson('/api/act', { question, id, lang });
-      d.textContent = '';
-      if (data.crisis) return showCrisis(d);
-      if (data.error) return d.append(errText(data.error));
-      data.actions.forEach((a) => d.append(actionCard(a)));
-      d.append(el('p', 'reply', data.message || (data.actions.length ? '' : t.none)));
-    } catch { d.replaceChildren(el('p', 'err', S().offline)); }
-    scroll();
-  };
-  return d;
-}
-
-function actionCard({ tool, result: r }) {
-  const t = S().act, c = el('section', 'act');
-  const link = (text, href) => { const a = el('a', null, text); a.href = href; return a; };
-  c.append(el('span', 'chose', `${t.chose}: ${tool}`));
-  if (tool === 'draft_email') {
-    c.append(el('h4', null, t.email(r.team)), el('p', 'meta', `${t.to}: ${r.to} · ${t.subject}: ${r.subject}`), el('p', 'mail', r.body),
-      link(t.openMail, r.mailto), el('p', 'meta', t.mailNote));
-  } else if (tool === 'add_reminder') {
-    const when = new Date(r.date + 'T00:00').toLocaleDateString(lang === 'zh' ? 'zh-SG' : 'en-SG', { weekday: 'short', day: 'numeric', month: 'short' }) + (r.time ? ` ${r.time}` : '');
-    const a = link(t.addCal, 'data:text/calendar;charset=utf-8,' + encodeURIComponent(r.ics)); a.download = r.filename;
-    c.append(el('h4', null, t.reminder(when)), el('p', null, r.title));
-    if (r.notes) c.append(el('p', 'notes', r.notes));
-    c.append(a);
-  } else if (tool === 'send_to_student_services') {
-    c.append(el('h4', null, t.queued), el('p', 'notes', r.question), el('p', 'meta', S().privacy));
-  } else if (tool === 'make_checklist') {
-    const ul = el('ul', 'items');
-    r.items.forEach((i) => { const li = el('li'), lab = el('label'), cb = el('input'); cb.type = 'checkbox'; lab.append(cb, i); li.append(lab); ul.append(li); });
-    c.append(el('h4', null, t.checklist(r.title)), ul);
-  }
-  return c;
-}
-
-function feedback(ids, question) {
+function feedback(ids) {
   const t = S(), f = el('p', 'fb');
   const btn = (label, onclick) => { const b = el('button', null, label); b.type = 'button'; b.onclick = onclick; return b; };
   const done = (body, msg) => { f.textContent = msg; post('/api/chat', { ...body, ids }); };
-  const no = (reason, comment) => {
-    done({ feedback: 'down', reason, comment }, t.thanksDown);
-    if (reason === 'incorrect') f.after(offerReview(question));
-  };
+  const no = (reason, comment) => done({ feedback: 'down', reason, comment }, t.thanksDown);
   f.append(t.fbAsk, btn(t.yes, () => done({ feedback: 'up' }, t.thanks)), btn(t.no, () => {
     f.replaceChildren(t.whatWrong);
     for (const [reason, label] of Object.entries(t.reasons)) f.append(btn(label, () => no(reason)));
@@ -631,22 +538,6 @@ function feedback(ids, question) {
     }));
   }));
   return f;
-}
-
-// Surprise feature 4: what the second-AI check found. ?demo=fail makes the first AI slip in one mistake, and the tag says so.
-const demoFail = new URLSearchParams(location.search).get('demo') === 'fail';
-function checkLine(c, demo) {
-  const t = S().check, p = el('div', c.status === 'passed' ? 'check' : 'check caught', t[c.status] || '');
-  if (demo) p.prepend(el('span', 'sample', t.demo), ' ');
-  if (c.status === 'fixed') {
-    const ul = el('ul');
-    for (const x of c.caught) {
-      const n = /^steps\[(\d+)\]$/.exec(x.field);
-      ul.append(el('li', null, t.caught(n ? t.step(+n[1] + 1) : x.field, x.wrong, String(x.kb_says).replace(/[.。]+$/, ''))));
-    }
-    p.append(ul);
-  }
-  return p;
 }
 
 // audio: a WAV data URL from the mic button. An attached photo goes with whatever is sent next.
@@ -663,27 +554,30 @@ async function ask(text, audio) {
   const bot = el('div'); bot.append(el('p', 'thinking', t.thinking)); chat.append(bot); scroll();
   input.value = ''; sendBtn.disabled = true; attach(null);
   try {
-    const data = await postJson('/api/chat', { message: text, image, audio, history, lang, demoFail });
+    const data = await postJson('/api/chat', { message: text, image, audio, history, lang });
     bot.textContent = '';
     if (data.crisis) return showCrisis(bot);
     if (data.error) { bot.append(...helpErr(data.error)); return; }
     if (data.seen) bot.append(el('p', 'seen', (image ? t.seen : t.heard) + data.seen));
     bot.append(el('p', 'reply', data.reply || ''));
     if (data.busy) bot.append(el('p', 'notes', t.danger)); // AI down: keyword-matched pages only, no crisis flag from the model
-    if (data.check) bot.append(checkLine(data.check, data.demo));
     const question = text || data.seen;
-    data.cards.forEach((c, i) => {
+    data.cards.forEach((c) => {
       bot.append(answer(c));
       if (c.id === 'counselling') { const l = el('button', 'wb-link', t.wb.link); l.type = 'button'; l.onclick = openWellbeing; bot.append(l); }
-      if (!i) bot.append(doIt(question, c.id)); // first card only: less clutter, fewer AI calls
     });
-    if (!data.cards.length) bot.append(el('p', 'none', t.notCovered), offerReview(question), doIt(question));
-    bot.append(feedback(data.cards.map((c) => c.id), question));
+    if (!data.cards.length) {
+      // Who to ask instead: the contacts page, straight from knowledge.json.
+      const c = kb?.find((e) => e.id === 'student-services-contacts');
+      bot.append(el('p', 'none', t.notCovered));
+      if (c) bot.append(sourceMeta(`${c.contact} · ${t.checked} ${fmtDate(c.reviewed)} · `, c.source));
+    }
+    bot.append(feedback(data.cards.map((c) => c.id)));
     // The photo itself never goes into history, only a "[photo]" marker.
     history.push({ role: 'user', content: (image ? '[photo] ' : '') + question }, { role: 'assistant', content: data.reply + ' [' + data.cards.map((c) => c.id).join(', ') + ']' });
   } catch {
     bot.textContent = ''; bot.append(...helpErr(t.offline));
-  } finally { sendBtn.disabled = false; input.focus(); scroll(); }
+  } finally { sendBtn.disabled = false; (audio ? micBtn : input).focus(); scroll(); } // voice: Space on the mic works again straight away
 }
 
 // Surprise feature 1: arrival plan. Same knowledge base, new user group, different output.
@@ -835,13 +729,14 @@ async function startRec() {
   const chunks = [], m = r.m = new MediaRecorder(r.stream), started = Date.now();
   m.ondataavailable = (e) => chunks.push(e.data);
   m.onstop = async () => {
-    r.stream.getTracks().forEach((tr) => tr.stop()); rec = null; micBtn.classList.remove('rec'); showNote(photo && S().photoHint);
+    r.stream.getTracks().forEach((tr) => tr.stop()); rec = null; clearInterval(r.tick); micBtn.classList.remove('rec'); showNote(photo && S().photoHint);
     if (Date.now() - started < 600) return showNote(S().micTap); // a tap, not a question: say how it works
     let wav;
     try { wav = await toWav(new Blob(chunks, { type: m.mimeType })); } catch { return showNote(S().micBad, true); }
     ask(input.value, wav);
   };
-  m.start(); micBtn.classList.add('rec'); showNote(S().recording);
+  const live = () => { showNote(S().recording(Math.floor((Date.now() - started) / 1000))); note.className = 'live'; };
+  m.start(); micBtn.classList.add('rec'); live(); r.tick = setInterval(live, 250);
   r.timer = setTimeout(stopRec, MAX_S * 1000);
 }
 function stopRec() {
