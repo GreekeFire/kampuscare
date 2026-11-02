@@ -1,8 +1,9 @@
 // `node test.js`: checks the crisis filter and that every knowledge-base entry is complete.
 import assert from 'node:assert';
 import { readFileSync } from 'node:fs';
-import { cleanFeedback } from './api/chat.js';
-import { isCrisis } from './lib/shared.js';
+import { cleanFeedback, knowledge, toCards } from './api/chat.js';
+import { isCrisis, saveQueue } from './lib/shared.js';
+import { cleanEntry, cleanFlags } from './api/review.js';
 import { toPlan, programmeContact } from './api/plan.js';
 
 for (const s of ['I want to kill myself', 'thinking about suicide', "I don't want to live anymore", '我想自杀', '我不想活了', 'saya mau bunuh diri', 'I want to end it all'])
@@ -39,4 +40,28 @@ assert(plan.profile.studentPass === null && !('extra' in plan.profile) && plan.p
 assert(plan.contact.line.startsWith('Murdoch') && programmeContact('Kaplan Diploma in IT').startsWith('Kaplan Diploma'), 'programme contact');
 assert(programmeContact(null).includes('6733 1877') && toPlan({}).sections.length === 0, 'empty model output is safe');
 
-console.log(`ok: crisis filter, plan filter + ${kb.length} knowledge entries`);
+// Review queue: server-side flags, entry validation, and only approved answers reach chat.
+const flagNames = (fl) => fl.map((f) => f.flag).sort();
+let fl = cleanFlags([{ flag: 'conflicts_with:not-real', reason: 'x', confidence: 90 }, { flag: 'conflicts_with:counselling', reason: 'differs', confidence: 250 }, { flag: 'made_up' }],
+  'Printing costs 10 cents a page.', 'how do I print?', {});
+assert.deepStrictEqual(flagNames(fl), ['conflicts_with:counselling', 'no_source'], 'unknown conflict dropped, no_source added');
+assert(fl.find((f) => f.flag === 'conflicts_with:counselling').confidence === 100, 'confidence clamped');
+fl = cleanFlags([], 'See https://kaplan.edu.sg/x. Withdrawal needs a form.', 'how do I leave my course', {});
+assert.deepStrictEqual(flagNames(fl), ['policy_sensitive'], 'policy keyword flagged, URL means no no_source');
+
+assert(cleanEntry({ title: '', steps: ['a'] }).error && cleanEntry({ title: 'Print', steps: [' ', ''] }).error, 'title and a step required');
+const ce = cleanEntry({ title: '  Print on campus ', steps: 'Go to library\n\nTap card', source: 'javascript:alert(1)', notes: 'n'.repeat(900) });
+assert(!ce.error && ce.entry.title === 'Print on campus' && ce.entry.steps.length === 2 && ce.entry.source === '' && ce.entry.notes.length === 500 && ce.entry.contact, 'entry cleaned');
+
+await saveQueue([
+  { id: 'p1', question: 'pending?', status: 'pending', created: '2026-11-01T00:00:00Z' },
+  { id: 'r1', question: 'rejected?', status: 'rejected', created: '2026-11-01T00:00:00Z' },
+  { id: 'a1', question: 'print?', status: 'approved', created: '2026-11-01T00:00:00Z', decided: '2026-11-02', entry: { ...ce.entry, group: 'Approved by Student Services' } },
+]);
+const merged = await knowledge();
+assert(merged.byId['approved-a1'] && !merged.byId['approved-p1'] && !merged.byId['approved-r1'] && merged.kb.length === kb.length + 1, 'only approved entries merged');
+const [card] = toCards([{ id: 'approved-a1', why: 'w' }], merged.byId);
+assert(card.approved === true && card.reviewed === '2026-11-02', 'approved card badge data');
+await saveQueue([]);
+
+console.log(`ok: crisis filter, plan filter, review queue + ${kb.length} knowledge entries`);

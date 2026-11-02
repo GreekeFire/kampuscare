@@ -6,7 +6,7 @@
 <title>KampusCare</title>
 <style>
   /* One accent, used only for things you act on: step numbers, links, the Ask button. */
-  :root { --paper:#fbfaf7; --ink:#1b1a1f; --muted:#67646d; --rule:#e3e0d8; --accent:#4b2a78; --warn:#8a4b00; --warn-bg:#fbefdc; --red:#a3221b; --red-bg:#fcebe9; }
+  :root { --paper:#fbfaf7; --ink:#1b1a1f; --muted:#67646d; --rule:#e3e0d8; --accent:#4b2a78; --accent-bg:#efeaf5; --warn:#8a4b00; --warn-bg:#fbefdc; --red:#a3221b; --red-bg:#fcebe9; }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--paper); color:var(--ink); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
   a { color:var(--accent); }
@@ -44,7 +44,10 @@
   .notes { font-size:14px; color:var(--muted); margin:0 0 8px; }
   .meta { font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
   .sample { display:inline-block; margin:0 0 6px; padding:1px 7px; border-radius:3px; background:var(--warn-bg); color:var(--warn); font-size:12px; font-weight:600; }
+  .approved { display:inline-block; margin:0 0 6px; padding:1px 7px; border-radius:3px; background:var(--accent-bg); color:var(--accent); font-size:12px; font-weight:600; }
   .none { color:var(--muted); }
+  .offer { margin:8px 0 0; }
+  .offer .meta { margin:4px 0 0; }
   .fb { font-size:13px; color:var(--muted); margin:4px 0 0; }
   .fb button { font:inherit; font-size:13px; background:none; border:1px solid var(--rule); border-radius:4px; padding:1px 10px; margin-left:6px; cursor:pointer; color:var(--ink); }
   .fb button:hover { border-color:var(--ink); }
@@ -184,22 +187,44 @@ function stepItem(text) {
 function answer(c) {
   const d = el('div', 'answer');
   if (c.sample) d.append(el('span', 'sample', 'App steps not yet confirmed'));
+  if (c.approved) d.append(el('span', 'approved', `Approved by Student Services · ${fmtDate(c.reviewed)}`));
   d.append(el('h3', null, c.title));
   if (c.why) d.append(el('p', 'why', c.why));
   const ol = el('ol', 'steps'); c.steps.forEach((s) => ol.append(stepItem(s))); d.append(ol);
   if (c.notes) d.append(el('p', 'notes', c.notes));
   const meta = el('div', 'meta');
-  meta.append(`${c.contact} · checked ${fmtDate(c.reviewed)} · `);
-  const a = el('a', null, 'source'); a.href = c.source; a.target = '_blank'; a.rel = 'noopener'; meta.append(a);
+  meta.append(`${c.contact} · checked ${fmtDate(c.reviewed)}`);
+  if (c.source) { const a = el('a', null, 'source'); a.href = c.source; a.target = '_blank'; a.rel = 'noopener'; meta.append(' · ', a); }
   d.append(meta);
   return d;
 }
 
-function feedback(ids) {
+// Surprise feature 2: students opt in to send an unanswered question for staff review. Never sent automatically.
+function offerReview(question) {
+  const d = el('div', 'offer'), b = el('button', 'ghost', 'Send this question to Student Services');
+  b.type = 'button';
+  d.append(b, el('p', 'meta', 'Only your question is sent, no name or ID.'));
+  b.onclick = async () => {
+    b.disabled = true;
+    try {
+      const r = await fetch('/api/review', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'ask', question }) });
+      const data = await r.json();
+      d.textContent = '';
+      if (data.crisis) return showCrisis(d);
+      d.append(data.error ? el('p', 'err', data.error) : el('p', 'notes', 'Sent. Once Student Services approves an answer, KampusCare will be able to answer this.'));
+    } catch { d.replaceChildren(el('p', 'err', "Couldn't reach KampusCare. Check your connection and try again.")); }
+  };
+  return d;
+}
+
+function feedback(ids, question) {
   const f = el('p', 'fb');
   const btn = (label, onclick) => { const b = el('button', null, label); b.type = 'button'; b.onclick = onclick; return b; };
   const done = (body, msg) => { f.textContent = msg; fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...body, ids }) }); };
-  const no = (reason, comment) => done({ feedback: 'down', reason, comment }, 'Thanks. Student Services: +65 6733 1877.');
+  const no = (reason, comment) => {
+    done({ feedback: 'down', reason, comment }, 'Thanks. Student Services: +65 6733 1877.');
+    if (reason === 'incorrect') f.after(offerReview(question));
+  };
   f.append('Did this answer it?', btn('Yes', () => done({ feedback: 'up' }, 'Thanks.')), btn('No', () => {
     f.replaceChildren('What went wrong?');
     for (const [reason, label] of [['not_asked', 'Not what I asked for'], ['incorrect', 'Incorrect/incomplete'], ['slow', 'Slow/buggy']])
@@ -230,8 +255,8 @@ async function ask(text) {
     if (data.error) { bot.append(el('p', 'err', data.error)); return; }
     bot.append(el('p', 'reply', data.reply || ''));
     data.cards.forEach((c) => bot.append(answer(c)));
-    if (!data.cards.length) bot.append(el('p', 'none', "That isn't in KampusCare's Kaplan pages yet. Kaplan general enquiries: +65 6733 1877."));
-    bot.append(feedback(data.cards.map((c) => c.id)));
+    if (!data.cards.length) bot.append(el('p', 'none', "That isn't in KampusCare's Kaplan pages yet. Kaplan general enquiries: +65 6733 1877."), offerReview(text));
+    bot.append(feedback(data.cards.map((c) => c.id), text));
     history.push({ role: 'user', content: text }, { role: 'assistant', content: data.reply + ' [' + data.cards.map((c) => c.id).join(', ') + ']' });
   } catch {
     bot.textContent = ''; bot.append(el('p', 'err', "Couldn't reach KampusCare. Check your connection and try again."));

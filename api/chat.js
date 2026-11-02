@@ -1,6 +1,6 @@
-import { KB, byId, API_KEY, isCrisis, readBody, send, callModel } from '../lib/shared.js';
+import { KB, API_KEY, isCrisis, readBody, send, callModel, getQueue } from '../lib/shared.js';
 
-const SYSTEM = `You are KampusCare, a guide that helps Kaplan Singapore students find how to do things and who to contact.
+const system = (kb) => `You are KampusCare, a guide that helps Kaplan Singapore students find how to do things and who to contact.
 
 RULES
 - Answer ONLY from the KNOWLEDGE BASE below. Never invent steps, menus, links, phone numbers, emails or policies.
@@ -18,10 +18,21 @@ Return JSON only, in this shape:
 - Write non-English text as normal characters, never as \\u escape codes.
 
 KNOWLEDGE BASE
-${JSON.stringify(KB.map(({ id, title, summary, steps, notes }) => ({ id, title, summary, steps, notes })))}`;
+${JSON.stringify(kb.map(({ id, title, summary, steps, notes }) => ({ id, title, summary, steps, notes })))}`;
+
+// knowledge.json plus answers Student Services approved in review.html. Pending and rejected items never get here.
+export async function knowledge() {
+  let approved = [];
+  try {
+    approved = (await getQueue()).filter((i) => i.status === 'approved' && i.entry)
+      .map((i) => ({ ...i.entry, id: `approved-${i.id}`, reviewed: i.decided, approved: true }));
+  } catch (err) { console.error('review queue unavailable, using knowledge.json only', err.message); }
+  const kb = [...KB, ...approved];
+  return { kb, byId: Object.fromEntries(kb.map((e) => [e.id, e])) };
+}
 
 // Contacts, sources and review dates always come from the knowledge base, never from the model.
-function toCards(matches = []) {
+export function toCards(matches = [], byId) {
   return matches
     .filter((m) => byId[m.id])
     .slice(0, 3)
@@ -30,7 +41,7 @@ function toCards(matches = []) {
       return {
         id: e.id, title: e.title, why: m.why || '',
         steps: Array.isArray(m.steps) && m.steps.length ? m.steps : e.steps,
-        notes: e.notes, contact: e.contact, source: e.source, reviewed: e.reviewed, sample: e.sample,
+        notes: e.notes, contact: e.contact, source: e.source, reviewed: e.reviewed, sample: e.sample, approved: e.approved,
       };
     });
 }
@@ -69,9 +80,10 @@ export default async function handler(req, res) {
     .filter((h) => h && (h.role === 'user' || h.role === 'assistant'))
     .map((h) => ({ role: h.role, content: String(h.content).slice(0, 1000) }));
 
-  const messages = [{ role: 'system', content: SYSTEM }, ...history, { role: 'user', content: message }];
+  const { kb, byId } = await knowledge();
+  const messages = [{ role: 'system', content: system(kb) }, ...history, { role: 'user', content: message }];
   const { out, error } = await callModel(messages);
   if (error) return send(res, 502, { error });
   if (out.crisis) return send(res, 200, { crisis: true });
-  return send(res, 200, { reply: String(out.reply || ''), cards: toCards(out.matches) });
+  return send(res, 200, { reply: String(out.reply || ''), cards: toCards(out.matches, byId) });
 }
