@@ -50,6 +50,18 @@ function toCards(matches = []) {
     });
 }
 
+// Feedback: rating, one of 4 fixed reasons, short free text. Never the student's question.
+const REASONS = ['not_asked', 'incorrect', 'slow', 'other'];
+export function cleanFeedback(body) {
+  const down = body.feedback !== 'up';
+  return {
+    rating: down ? 'down' : 'up',
+    reason: down && REASONS.includes(body.reason) ? body.reason : undefined,
+    comment: down && body.comment ? String(body.comment).slice(0, 200) : undefined,
+    ids: [].concat(body.ids || []).slice(0, 3),
+  };
+}
+
 async function readBody(req) {
   if (req.body) return typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
   let raw = '';
@@ -69,9 +81,8 @@ export default async function handler(req, res) {
   let body;
   try { body = await readBody(req); } catch { return send(res, 400, { error: 'Bad JSON' }); }
 
-  // Thumbs up/down: log the entry ids and rating only. Never the student's message.
   if (body.feedback) {
-    console.log('feedback', JSON.stringify({ rating: body.feedback === 'up' ? 'up' : 'down', ids: [].concat(body.ids || []).slice(0, 3) }));
+    console.log('feedback', JSON.stringify(cleanFeedback(body)));
     return send(res, 200, { ok: true });
   }
 
