@@ -64,6 +64,18 @@ Return JSON only:
 KNOWLEDGE BASE
 ${JSON.stringify(KB.map(({ id, title, summary, steps, notes, contact }) => ({ id, title, summary, steps, notes, contact })))}`;
 
+// Student opt-in: queue a question for staff. Also used by api/act.js's send_to_student_services tool.
+// Only the question text is stored: no IP, name or ID.
+export async function enqueue(q) {
+  const question = str(q, 300);
+  if (!question) return { status: 400, error: 'Empty question' };
+  if (isCrisis(question)) return { status: 200, crisis: true };
+  const queue = await getQueue();
+  if (queue.length >= MAX_ITEMS) return { status: 429, error: 'Student Services has a lot of questions right now. Please call +65 6733 1877.' };
+  await saveQueue([...queue, { id: randomBytes(4).toString('hex'), question, status: 'pending', created: new Date().toISOString() }]);
+  return { status: 200, question };
+}
+
 // Hash both sides so timingSafeEqual gets equal-length buffers.
 const digest = (s) => createHash('sha256').update(String(s)).digest();
 const staffOk = (pw) => timingSafeEqual(digest(pw ?? ''), digest(process.env.STAFF_PASSWORD));
@@ -76,14 +88,8 @@ export default async function handler(req, res) {
 
   try {
     if (body.action === 'ask') {
-      // Only the question text is stored: no IP, name or ID.
-      const question = str(body.question, 300);
-      if (!question) return send(res, 400, { error: 'Empty question' });
-      if (isCrisis(question)) return send(res, 200, { crisis: true });
-      const queue = await getQueue();
-      if (queue.length >= MAX_ITEMS) return send(res, 429, { error: 'Student Services has a lot of questions right now. Please call +65 6733 1877.' });
-      await saveQueue([...queue, { id: randomBytes(4).toString('hex'), question, status: 'pending', created: new Date().toISOString() }]);
-      return send(res, 200, { ok: true });
+      const r = await enqueue(body.question);
+      return send(res, r.status, r.status === 200 ? (r.crisis ? { crisis: true } : { ok: true }) : { error: r.error });
     }
 
     // ponytail: no STAFF_PASSWORD = open review page (hackathon demo); set it in Vercel to lock the page

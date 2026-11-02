@@ -2,9 +2,10 @@
 import assert from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { cleanFeedback, knowledge, toCards, validMedia, checkerInput, cleanCheck, contain } from './api/chat.js';
-import { isCrisis, saveQueue } from './lib/shared.js';
+import { isCrisis, saveQueue, getQueue } from './lib/shared.js';
 import { cleanEntry, cleanFlags } from './api/review.js';
 import { toPlan, programmeContact } from './api/plan.js';
+import { checkEmail, checkDate, checkTime, mailto, buildIcs, runTool } from './api/act.js';
 
 for (const s of ['I want to kill myself', 'thinking about suicide', "I don't want to live anymore", '我想自杀', '我不想活了', 'saya mau bunuh diri', 'I want to end it all'])
   assert(isCrisis(s), `should flag: ${s}`);
@@ -96,4 +97,30 @@ assert(String(held.cards[0].steps) === String(leaveKb.steps) && held.cards[0].no
 const noReply = contain('Call 9999', bad, [{ id: 'leave', field: 'reply' }], merged.byId);
 assert(noReply.reply === '' && noReply.cards[0].steps[1].includes('10'), 'bad reply dropped, cards kept');
 
-console.log(`ok: crisis filter, plan filter, review queue + ${kb.length} knowledge entries`);
+// Make It Act: tool-arg validators, .ics and mailto builders.
+assert(checkEmail('Merlinda.Tan@kaplan.com').team.id === 'contact-murdoch', 'KB email accepted, mapped to its Contacts team');
+for (const bad of ['someone@gmail.com', 'merlinda.tan@kaplan.com.evil.com', '', undefined]) assert.throws(() => checkEmail(bad), `rejects email: ${bad}`);
+assert(checkDate('2026-11-05', '2026-11-02') === '2026-11-05' && checkDate('2027-11-02', '2026-11-02'), 'date within 12 months');
+for (const bad of ['2026-11-01', '2027-11-03', '2026-02-30', '5 Nov', '2026-11-5', null]) assert.throws(() => checkDate(bad, '2026-11-02'), `rejects date: ${bad}`);
+assert(checkTime('09:30') === '09:30' && checkTime(undefined) === '', 'time HH:MM or empty');
+assert.throws(() => checkTime('9pm'), 'rejects time 9pm');
+await assert.rejects(runTool('draft_email', { to: 'kfd.sg@kaplan.com', subject: 'x'.repeat(151), body: 'b' }), /too long/, 'subject length');
+await assert.rejects(runTool('draft_email', { to: 'kfd.sg@kaplan.com', subject: 's', body: ' ' }), /required/, 'empty body');
+await assert.rejects(runTool('make_checklist', { title: 't', items: Array(11).fill('x') }), /1 to 10/, 'checklist cap');
+await assert.rejects(runTool('draft_email', { to: 'kfd.sg@kaplan.com', subject: 's', body: 'ID S1234567A' }, { question: 'help' }), /NRIC/, 'invented ID rejected');
+await assert.rejects(runTool('delete_everything', {}), /Unknown tool/, 'unknown tool');
+const em = await runTool('draft_email', { to: 'merlinda.tan@kaplan.com', subject: 'Leave & MC?', body: 'Hi,\\nI am sick.' }, { lang: 'zh' });
+assert(em.team === 'Murdoch University 学生服务' && em.body === 'Hi,\nI am sick.', 'zh team name, double-escaped newline fixed');
+assert(mailto('a@kaplan.com', 'Leave & MC?', 'Hi,\n我病了 #1') === 'mailto:a@kaplan.com?subject=Leave%20%26%20MC%3F&body=Hi%2C%0D%0A%E6%88%91%E7%97%85%E4%BA%86%20%231', 'mailto encoding, CRLF line breaks');
+const ics = buildIcs({ title: 'Submit MC; on Kaplan360, now', date: '2026-12-31', time: '', notes: '提交病假单'.repeat(20) + '\nline 2' }, new Date('2026-11-02T01:02:03Z'));
+assert(ics.startsWith('BEGIN:VCALENDAR\r\n') && ics.endsWith('END:VCALENDAR\r\n'), 'ics wrapper, CRLF');
+assert(ics.includes('DTSTART;VALUE=DATE:20261231\r\nDTEND;VALUE=DATE:20270101') && ics.includes('DTSTAMP:20261102T010203Z'), 'all-day dates, rolls over the year');
+assert(ics.includes('SUMMARY:Submit MC\\; on Kaplan360\\, now') && ics.replace(/\r\n /g, '').includes('\\nline 2'), 'ics text escaped');
+assert(ics.split('\r\n').every((l) => Buffer.byteLength(l) <= 75), 'lines folded to 75 octets');
+assert(buildIcs({ title: 't', date: '2026-11-05', time: '09:30' }).includes('DTSTART:20261105T093000\r\nDURATION:PT30M'), 'timed reminder');
+const q = await runTool('send_to_student_services', { question: 'Can I bring my dog?' });
+assert(q.queued && (await getQueue()).at(-1).question === q.question, 'queued via review.js');
+await assert.rejects(runTool('send_to_student_services', { question: 'x'.repeat(301) }), /too long/, 'queue question max 300');
+await saveQueue([]);
+
+console.log(`ok: crisis filter, plan filter, review queue, make-it-fail checker, make-it-act tools + ${kb.length} knowledge entries`);

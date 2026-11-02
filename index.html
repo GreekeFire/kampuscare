@@ -110,6 +110,13 @@
   .check { margin:0 0 12px; font-size:13px; color:var(--muted); }
   .check.caught { padding:8px 10px; border-radius:4px; background:var(--warn-bg); color:var(--warn); }
   .check ul { margin:4px 0 0; padding-left:18px; }
+  /* Surprise feature 5: Make It Act */
+  .act { margin:0 0 14px; padding:10px 14px; border-left:3px solid var(--accent); background:#fff; }
+  .act h4 { margin:2px 0 6px; font-size:15px; }
+  .act .chose { font-size:12px; color:var(--accent); font-weight:600; font-family:ui-monospace,monospace; }
+  .act .mail { white-space:pre-wrap; font-size:14px; margin:0 0 8px; padding:8px 10px; background:var(--paper); border:1px solid var(--rule); border-radius:4px; }
+  .act .items > li { display:block; }
+  .act .items input { margin-right:8px; accent-color:var(--accent); }
 </style>
 </head>
 <body>
@@ -172,6 +179,13 @@ const STRINGS = {
     checked: 'checked', source: 'source',
     offline: "Couldn't reach KampusCare. Check your connection and try again.",
     serverErrors: {},
+    act: {
+      doIt: 'Do it for me', working: 'Working on it…', chose: 'AI chose', none: 'Nothing to do automatically here.',
+      email: (team) => `Drafted an email to ${team}`, to: 'To', subject: 'Subject', openMail: 'Open in my email app',
+      mailNote: "Fill in the [placeholders], then send it yourself. Nothing is sent automatically.",
+      reminder: (when) => `Made a reminder for ${when}`, addCal: 'Add to my calendar (.ics)',
+      queued: 'Sent your question to Student Services', checklist: (title) => `Made a checklist: ${title}`,
+    },
     photo: 'Add a photo or screenshot', removePhoto: 'Remove photo', defaultQ: 'What does this mean and what should I do?',
     photoHint: "Crop out your name, student ID and photo before sending. Photos aren't stored.",
     photoTooBig: 'That photo is still too large after shrinking. Try cropping it or sending a screenshot.', photoBad: "That file couldn't be opened as a photo.",
@@ -228,6 +242,13 @@ const STRINGS = {
       'The review queue is unavailable right now. Please try again.': '暂时无法提交，请稍后再试。',
       "That photo couldn't be read. Try a JPEG or PNG under 3 MB.": '无法读取这张照片。请用 3 MB 以内的 JPEG 或 PNG。',
       "That voice message couldn't be read. Keep it under 30 seconds.": '无法读取这条语音。请控制在 30 秒以内。',
+    },
+    act: {
+      doIt: '帮我办', working: '正在处理…', chose: 'AI 选择了', none: '这里没有可以自动完成的事。',
+      email: (team) => `已起草一封发给 ${team} 的邮件`, to: '收件人', subject: '主题', openMail: '在邮件 App 中打开',
+      mailNote: '请填好 [方括号] 里的内容，再由你自己发送。不会自动发送。',
+      reminder: (when) => `已创建提醒：${when}`, addCal: '添加到日历（.ics）',
+      queued: '已把你的问题发送给学生服务处', checklist: (title) => `已生成清单：${title}`,
     },
     photo: '添加照片或截图', removePhoto: '移除照片', defaultQ: '这是什么意思？我该怎么做？',
     photoHint: '发送前请裁掉你的姓名、学号和照片。照片不会被保存。',
@@ -395,6 +416,48 @@ function offerReview(question) {
   return d;
 }
 
+// Surprise feature 5: the AI picks tools and the server runs them. Each card names the tool the AI chose.
+function doIt(question, id) {
+  const t = S().act, d = el('div', 'offer'), b = el('button', 'ghost', t.doIt);
+  b.type = 'button'; d.append(b);
+  b.onclick = async () => {
+    b.disabled = true; d.replaceChildren(el('p', 'thinking', t.working));
+    try {
+      const data = await (await post('/api/act', { question, id, lang })).json();
+      d.textContent = '';
+      if (data.crisis) return showCrisis(d);
+      if (data.error) return d.append(errText(data.error));
+      data.actions.forEach((a) => d.append(actionCard(a)));
+      d.append(el('p', 'reply', data.message || (data.actions.length ? '' : t.none)));
+    } catch { d.replaceChildren(el('p', 'err', S().offline)); }
+    scroll();
+  };
+  return d;
+}
+
+function actionCard({ tool, result: r }) {
+  const t = S().act, c = el('section', 'act');
+  const link = (text, href) => { const a = el('a', null, text); a.href = href; return a; };
+  c.append(el('span', 'chose', `${t.chose}: ${tool}`));
+  if (tool === 'draft_email') {
+    c.append(el('h4', null, t.email(r.team)), el('p', 'meta', `${t.to}: ${r.to} · ${t.subject}: ${r.subject}`), el('p', 'mail', r.body),
+      link(t.openMail, r.mailto), el('p', 'meta', t.mailNote));
+  } else if (tool === 'add_reminder') {
+    const when = new Date(r.date + 'T00:00').toLocaleDateString(lang === 'zh' ? 'zh-SG' : 'en-SG', { weekday: 'short', day: 'numeric', month: 'short' }) + (r.time ? ` ${r.time}` : '');
+    const a = link(t.addCal, 'data:text/calendar;charset=utf-8,' + encodeURIComponent(r.ics)); a.download = r.filename;
+    c.append(el('h4', null, t.reminder(when)), el('p', null, r.title));
+    if (r.notes) c.append(el('p', 'notes', r.notes));
+    c.append(a);
+  } else if (tool === 'send_to_student_services') {
+    c.append(el('h4', null, t.queued), el('p', 'notes', r.question), el('p', 'meta', S().privacy));
+  } else if (tool === 'make_checklist') {
+    const ul = el('ul', 'items');
+    r.items.forEach((i) => { const li = el('li'), lab = el('label'), cb = el('input'); cb.type = 'checkbox'; lab.append(cb, i); li.append(lab); ul.append(li); });
+    c.append(el('h4', null, t.checklist(r.title)), ul);
+  }
+  return c;
+}
+
 function feedback(ids, question) {
   const t = S(), f = el('p', 'fb');
   const btn = (label, onclick) => { const b = el('button', null, label); b.type = 'button'; b.onclick = onclick; return b; };
@@ -425,7 +488,7 @@ function checkLine(c, demo) {
     const ul = el('ul');
     for (const x of c.caught) {
       const n = /^steps\[(\d+)\]$/.exec(x.field);
-      ul.append(el('li', null, t.caught(n ? t.step(+n[1] + 1) : x.field, x.wrong, x.kb_says)));
+      ul.append(el('li', null, t.caught(n ? t.step(+n[1] + 1) : x.field, x.wrong, String(x.kb_says).replace(/[.。]+$/, ''))));
     }
     p.append(ul);
   }
@@ -453,9 +516,9 @@ async function ask(text, audio) {
     if (data.seen) bot.append(el('p', 'seen', (image ? t.seen : t.heard) + data.seen));
     bot.append(el('p', 'reply', data.reply || ''));
     if (data.check) bot.append(checkLine(data.check, data.demo));
-    data.cards.forEach((c) => bot.append(answer(c)));
     const question = text || data.seen;
-    if (!data.cards.length) bot.append(el('p', 'none', t.notCovered), offerReview(question));
+    data.cards.forEach((c) => bot.append(answer(c), doIt(question, c.id)));
+    if (!data.cards.length) bot.append(el('p', 'none', t.notCovered), offerReview(question), doIt(question));
     bot.append(feedback(data.cards.map((c) => c.id), question));
     // The photo itself never goes into history, only a "[photo]" marker.
     history.push({ role: 'user', content: (image ? '[photo] ' : '') + question }, { role: 'assistant', content: data.reply + ' [' + data.cards.map((c) => c.id).join(', ') + ']' });
