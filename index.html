@@ -26,6 +26,9 @@
   .index button { all:unset; display:block; width:100%; padding:7px 0; cursor:pointer; color:var(--ink); }
   .index button:hover, .index button:focus-visible { color:var(--accent); text-decoration:underline; text-underline-offset:3px; }
   .index .tag { font-size:11px; color:var(--warn); margin-left:6px; white-space:nowrap; }
+  .plan-open { all:unset; display:block; cursor:pointer; margin:0 0 36px; padding:12px 0 12px 18px; border-left:3px solid var(--accent); }
+  .plan-open strong { color:var(--accent); }
+  .plan-open:hover strong, .plan-open:focus-visible strong { text-decoration:underline; text-underline-offset:3px; }
   .provenance { margin:32px 0 0; padding-top:12px; border-top:1px solid var(--rule); font-size:13px; color:var(--muted); }
 
   /* Conversation */
@@ -52,6 +55,34 @@
   .crisis ul { margin:8px 0; padding-left:20px; }
   .crisis a { color:var(--red); font-weight:700; }
 
+  /* Arrival plan */
+  .plan-input { display:flex; flex-direction:column; gap:10px; align-items:flex-start; margin:0 0 28px; }
+  .plan-input textarea { width:100%; min-height:96px; }
+  .primary { height:44px; background:var(--accent); color:#fff; border:0; border-radius:8px; padding:0 20px; font:inherit; font-weight:600; cursor:pointer; }
+  .primary:disabled { opacity:.45; cursor:wait; }
+  .ghost { font:inherit; font-size:14px; background:none; border:1px solid var(--rule); border-radius:6px; padding:6px 14px; cursor:pointer; color:var(--ink); }
+  .ghost:hover { border-color:var(--ink); }
+  .plan h2 { font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:28px 0 8px; padding-bottom:6px; border-bottom:1px solid var(--rule); }
+  .profile { padding:14px 18px; border-left:3px solid var(--accent); background:#fff; }
+  .profile h2 { margin-top:0; color:var(--accent); border:0; padding:0; }
+  .profile .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px 24px; margin:0 0 12px; }
+  .profile label { font-size:12.5px; color:var(--muted); display:block; }
+  .profile input, .profile select { font:inherit; font-size:16px; width:100%; border:0; border-bottom:1px solid var(--rule); background:none; padding:2px 0; color:var(--ink); }
+  .profile input:focus, .profile select:focus { outline:none; border-bottom-color:var(--accent); }
+  .items { list-style:none; margin:0; padding:0; }
+  .items > li { display:grid; grid-template-columns:24px 1fr; gap:2px 10px; padding:9px 0; border-bottom:1px solid var(--rule); }
+  .items > li > input { margin:4px 0 0; width:16px; height:16px; accent-color:var(--accent); }
+  .items .due { font-weight:600; font-variant-numeric:tabular-nums; margin-right:8px; }
+  .items .meta { grid-column:2; }
+  .plan-actions { margin:28px 0 0; }
+  @media print {
+    header, form, .plan-input, .plan-actions, .profile button { display:none !important; }
+    body { background:#fff; font-size:12pt; }
+    main { padding:0; }
+    .meta a::after { content:" (" attr(href) ")"; word-break:break-all; }
+    .items > li { break-inside:avoid; }
+  }
+
   /* Composer */
   form { position:fixed; inset:auto 0 0 0; background:var(--paper); border-top:1px solid var(--rule); padding:12px 16px calc(12px + env(safe-area-inset-bottom)); }
   form > div { max-width:760px; margin:0 auto; display:flex; gap:8px; align-items:flex-end; }
@@ -75,6 +106,7 @@
   <section class="intro" id="intro">
     <h1>How do I do this at Kaplan?</h1>
     <p class="stance">Ask in your own words, in any language. KampusCare only answers from the Kaplan pages listed below. If your question isn't covered, it tells you who to ask instead of guessing.</p>
+    <button class="plan-open" type="button" id="plan-open">New international student? <strong>Get your first 2 weeks planned →</strong></button>
     <div class="index" id="index"></div>
     <p class="provenance" id="provenance"></p>
   </section>
@@ -206,7 +238,100 @@ async function ask(text) {
   } finally { sendBtn.disabled = false; input.focus(); scroll(); }
 }
 
-form.onsubmit = (e) => { e.preventDefault(); ask(input.value); };
+// Surprise feature 1: arrival plan. Same knowledge base, new user group, different output.
+const PROFILE = [['programme', 'Programme'], ['home', 'Home country / language'], ['arrival', 'Arrival date'], ['accommodation', 'Staying in'], ['under18', 'Under 18'], ['studentPass', "Student's Pass"]];
+const isDate = (d) => /^\d{4}-\d{2}-\d{2}$/.test(d || '');
+
+function openPlan() {
+  document.getElementById('intro')?.remove();
+  document.getElementById('back').hidden = false;
+  form.hidden = true;
+  const v = el('section', 'plan intro');
+  v.append(el('h1', null, 'Your first 2 weeks at Kaplan'),
+    el('p', 'stance', "Tell us about yourself in your own words and language. KampusCare builds a dated checklist only from the Kaplan pages it knows, and says what it can't answer. Don't include your name, passport or student ID."));
+  const box = el('div', 'plan-input');
+  const ta = el('textarea'); ta.maxLength = 1000; ta.setAttribute('aria-label', 'About you');
+  ta.placeholder = "e.g. I'm from China, starting a Murdoch degree, arriving 20 Nov, under 18, staying in a hostel";
+  const go = el('button', 'primary', 'Generate plan'); go.type = 'button';
+  const out = el('div');
+  box.append(ta, go); v.append(box, out); chat.append(v); ta.focus();
+
+  async function generate(profile) {
+    const text = ta.value.trim();
+    if (!text || go.disabled) return ta.focus();
+    go.disabled = true;
+    out.replaceChildren(el('p', 'thinking', 'Building your plan from the Kaplan handbook…'));
+    try {
+      const r = await fetch('/api/plan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, profile }) });
+      const data = await r.json();
+      out.textContent = '';
+      if (data.crisis) return showCrisis(out);
+      if (data.error) return out.append(el('p', 'err', data.error));
+      renderPlan(out, data, generate);
+    } catch {
+      out.replaceChildren(el('p', 'err', "Couldn't reach KampusCare. Check your connection and try again."));
+    } finally { go.disabled = false; }
+  }
+  go.onclick = () => generate();
+}
+
+const sourceMeta = (prefix, href) => {
+  const meta = el('div', 'meta'), a = el('a', null, 'source');
+  a.href = href; a.target = '_blank'; a.rel = 'noopener';
+  meta.append(prefix, a); return meta;
+};
+
+function renderPlan(out, data, regenerate) {
+  // What the AI understood, editable: fix a field and regenerate.
+  const prof = el('div', 'profile'), grid = el('div', 'grid'), fields = {};
+  prof.append(el('h2', null, 'What we understood about you'));
+  for (const [k, label] of PROFILE) {
+    const val = data.profile[k];
+    let f;
+    if (k === 'under18' || k === 'studentPass') {
+      f = el('select');
+      for (const [v, t] of [['', 'Not sure'], ['true', 'Yes'], ['false', 'No']]) { const o = el('option', null, t); o.value = v; f.append(o); }
+      f.value = val == null ? '' : String(val);
+    } else {
+      f = el('input'); f.type = k === 'arrival' && isDate(val) ? 'date' : 'text';
+      f.value = val || ''; f.placeholder = 'Not mentioned'; f.maxLength = 80;
+    }
+    const lab = el('label', null, label); lab.append(f); grid.append(lab); fields[k] = f;
+  }
+  const regen = el('button', 'ghost', 'Not right? Fix it above, then regenerate'); regen.type = 'button';
+  regen.onclick = () => regenerate(Object.fromEntries(Object.entries(fields).map(([k, f]) =>
+    [k, f.tagName === 'SELECT' ? (f.value === '' ? null : f.value === 'true') : f.value.trim() || null])));
+  prof.append(grid, regen); out.append(prof);
+
+  if (!data.sections.length) out.append(el('p', 'none', "We couldn't build a plan from KampusCare's Kaplan pages. Kaplan general enquiries: +65 6733 1877."));
+  for (const s of data.sections) {
+    const ul = el('ul', 'items');
+    for (const i of s.items) {
+      const li = el('li'), cb = el('input'), body = el('div');
+      body.append(...stepItem(i.task).childNodes);
+      cb.type = 'checkbox'; cb.setAttribute('aria-label', 'Done');
+      if (i.due) body.prepend(el('span', 'due', isDate(i.due) ? fmtDate(i.due) : i.due));
+      if (i.sample) body.prepend(el('span', 'sample', 'App steps not yet confirmed'), el('br'));
+      li.append(cb, body, sourceMeta(`${i.contact} · checked ${fmtDate(i.reviewed)} · `, i.source)); ul.append(li);
+    }
+    out.append(el('h2', null, s.title), ul);
+  }
+
+  out.append(el('h2', null, 'Your Student Services team'), el('p', null, data.contact.line),
+    sourceMeta(`checked ${fmtDate(data.contact.reviewed)} · `, data.contact.source));
+
+  if (data.missing.length) {
+    const ul = el('ul', 'notes'); data.missing.forEach((m) => ul.append(el('li', null, m)));
+    out.append(el('h2', null, 'Not covered by KampusCare yet'), el('p', 'notes', 'Ask your Student Services team or programme consultant about:'), ul);
+  }
+
+  const actions = el('div', 'plan-actions'), print = el('button', 'primary', 'Print / save as PDF');
+  print.type = 'button'; print.onclick = () => window.print();
+  actions.append(print); out.append(actions);
+}
+
+document.getElementById('plan-open').onclick = openPlan;
+form.onsubmit =(e) => { e.preventDefault(); ask(input.value); };
 input.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(input.value); } };
 document.getElementById('urgent').onclick = () => { const d = el('div'); chat.append(d); showCrisis(d); };
 </script>

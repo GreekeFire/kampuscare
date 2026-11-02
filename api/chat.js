@@ -1,19 +1,4 @@
-import { readFileSync } from 'node:fs';
-
-const KB = JSON.parse(readFileSync(new URL('../knowledge.json', import.meta.url), 'utf8'));
-const byId = Object.fromEntries(KB.map((e) => [e.id, e]));
-
-// Any OpenAI-compatible provider works: swap these three env vars (see README).
-const BASE_URL = process.env.LLM_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta/openai';
-// Tried in order: if one is overloaded (503) or rate-limited (429), the next one answers.
-const MODELS = [process.env.LLM_MODEL || 'gemini-3.5-flash-lite', process.env.LLM_FALLBACK_MODEL || 'gemini-3.1-flash-lite'];
-const API_KEY = process.env.LLM_API_KEY;
-
-// Checked BEFORE the AI sees anything, so a crisis never depends on the model.
-// ponytail: keyword list, will miss indirect phrasing; the model's "crisis" flag is the second net.
-const CRISIS = /suicid|kill my ?self|\bend (my life|it all)\b|want to die|wanna die|don'?t want to (live|be alive)|no reason to live|self[- ]?harm|hurt (my ?self)|cut(ting)? myself|自杀|自殺|想死|不想活|轻生|结束生命|bunuh diri|tự tử|자살|ฆ่าตัวตาย|आत्महत्या|தற்கொலை|magpakamatay/i;
-
-export const isCrisis = (text) => CRISIS.test(text);
+import { KB, byId, API_KEY, isCrisis, readBody, send, callModel } from '../lib/shared.js';
 
 const SYSTEM = `You are KampusCare, a guide that helps Kaplan Singapore students find how to do things and who to contact.
 
@@ -62,19 +47,6 @@ export function cleanFeedback(body) {
   };
 }
 
-async function readBody(req) {
-  if (req.body) return typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-  let raw = '';
-  for await (const chunk of req) raw += chunk;
-  return JSON.parse(raw || '{}');
-}
-
-function send(res, status, data) {
-  res.statusCode = status;
-  res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify(data));
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
 
@@ -98,24 +70,8 @@ export default async function handler(req, res) {
     .map((h) => ({ role: h.role, content: String(h.content).slice(0, 1000) }));
 
   const messages = [{ role: 'system', content: SYSTEM }, ...history, { role: 'user', content: message }];
-  let status = 0;
-  // Each model gets one try; a busy model or unreadable JSON moves on to the next.
-  for (const model of MODELS) {
-    try {
-      const r = await fetch(`${BASE_URL}/chat/completions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${API_KEY}` },
-        body: JSON.stringify({ model, response_format: { type: 'json_object' }, messages }),
-      });
-      status = r.status;
-      if (!r.ok) { console.error('LLM error', model, r.status, (await r.text()).slice(0, 300)); continue; }
-      const text = (await r.json()).choices?.[0]?.message?.content || '{}';
-      const out = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
-      if (out.crisis) return send(res, 200, { crisis: true });
-      return send(res, 200, { reply: String(out.reply || ''), cards: toCards(out.matches) });
-    } catch (err) {
-      console.error('LLM failed', model, err.message);
-    }
-  }
-  return send(res, 502, { error: status === 429 || status === 503 ? 'The AI is busy right now. Please try again in a minute.' : 'Something went wrong with the AI. Please try again.' });
+  const { out, error } = await callModel(messages);
+  if (error) return send(res, 502, { error });
+  if (out.crisis) return send(res, 200, { crisis: true });
+  return send(res, 200, { reply: String(out.reply || ''), cards: toCards(out.matches) });
 }
