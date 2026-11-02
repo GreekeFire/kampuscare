@@ -47,12 +47,12 @@ Needs [Node.js 20+](https://nodejs.org). No other installs.
 
 1. Put this folder in a GitHub repo. `.env` is git-ignored, so **never commit your key**.
 2. Go to https://vercel.com, sign in with GitHub, choose "Add New Project", and pick the repo.
-3. In **Environment Variables**, add `LLM_API_KEY` (plus `LLM_MODEL`, `LLM_FALLBACK_MODEL`, `LLM_BASE_URL` if you changed them).
+3. In **Environment Variables**, add `LLM_API_KEY` (plus `LLM_MODEL`, `LLM_FALLBACK_MODEL`, `LLM_BASE_URL` if you changed them). `LLM_FALLBACK_MODEL` takes a comma list of extra models. Each free model has its own quota, so adding one or two more makes a dead demo less likely.
 4. In **Storage → Marketplace**, add **Upstash Redis** (free) and connect it to the project. It fills in `KV_REST_API_URL` and `KV_REST_API_TOKEN` (the `UPSTASH_REDIS_REST_*` names work too).
 5. Optional: add `STAFF_PASSWORD` to lock the review page. Without it, **anyone with the link to /review.html can approve answers**. No code change needed either way.
 6. Deploy. You get a `https://….vercel.app` link to put on the slides and as a QR code.
 
-Vercel serves the two HTML pages and runs `api/*.js` as serverless functions, so no config is needed. `dev.js` is only for running it locally.
+Vercel serves the two HTML pages and runs `api/*.js` as serverless functions, so no config is needed. `dev.js` is only for running it locally. `.vercelignore` keeps the `.md` notes, `test.js`, `dev.js` and `.prompts` off the live site.
 
 ## 3. How it works
 
@@ -60,25 +60,27 @@ Vercel serves the two HTML pages and runs `api/*.js` as serverless functions, so
 Student ──► index.html ──► /api/chat ──► 1. Crisis keyword check (no AI involved)
  (text, photo   │                         │     └─ match → fixed crisis card (SOS 1767, 995, mindline 1771)
   or voice)     │                         ├─ 2. Gemini + knowledge.json + staff-approved answers (+ photo/voice)
-                │                         ├─ 3. A second Gemini call checks the answer against the entries it used
+                │                         ├─ 3. Demo mode (?demo=fail) or CHECK_ALL=1: a second Gemini call checks the answer
                 │                         │     └─ problem → one fix round → still wrong → original Kaplan steps
-                │                         └─ 4. Server builds the cards (contacts, links, dates never come from the AI)
+                │                         ├─ 4. Server builds the cards (contacts, links, dates never come from the AI)
+                │                         └─ AI busy → closest knowledge-base pages by keyword, no AI, labelled "AI is busy"
                 ├─ "Do it for me" ──► /api/act ──► Gemini picks tools: draft_email, add_reminder,
                 │                                   make_checklist, send_to_student_services
                 ├──────────► /api/plan ──► arrival plan, same checks, items must cite knowledge-base ids
-                └─ "Send to Student Services" ──► /api/review ◄── review.html (staff draft, tick flags, approve)
-                                                      └─ queue in Upstash Redis
+                ├─ "Send to Student Services" ──► /api/review ◄── review.html (staff draft, tick flags, approve)
+                │                                     └─ queue in Upstash Redis
+                └─ Wellbeing page ──► runs in the browser only, no AI, nothing stored
 ```
 
 | File | What it is |
 |---|---|
 | `knowledge.json` | **The product.** 32 entries from Kaplan's public pages and the Oct 2026 Student Services PDF. Each has `title_zh`. |
-| `api/chat.js` | Chat: crisis filter, AI call (text, photo or voice), the second-AI checker, card building, feedback. Merges approved review answers into the knowledge base. If Redis is down it uses `knowledge.json` only. |
+| `api/chat.js` | Chat: crisis filter, AI call (text, photo or voice), the second-AI checker (demo mode or `CHECK_ALL=1`), card building, feedback, and the keyword fallback when the AI is busy. Merges approved review answers into the knowledge base. If Redis is down it uses `knowledge.json` only. |
 | `api/act.js` | Surprise feature 5: "Do it for me". The AI picks and calls tools; every tool argument is validated on the server. |
 | `api/plan.js` | Surprise feature 1: the arrival plan. |
 | `api/review.js` | Surprise feature 2: the queue, AI draft with risk flags, approve or reject. |
 | `lib/shared.js` | Shared code: knowledge base, crisis regex, model call with fallback (plain and with tools), Redis queue. |
-| `index.html` | The student page, including the English / 中文 strings. One file, no framework. |
+| `index.html` | The student page, including the Wellbeing page and the English / 中文 strings. One file, no framework. |
 | `review.html` | The staff review page. |
 | `dev.js` / `test.js` | Local server / self-check. |
 
@@ -106,7 +108,7 @@ When you have them: update the `steps` in each entry, set `"sample": false`, and
 
 ## 5. Cost: free
 
-- **Gemini free tier:** costs $0. Google lists `gemini-3.5-flash-lite` (the default here) as "Free of charge" on the free tier. Limits are shown at https://aistudio.google.com/rate-limit. They're plenty for a demo. If the main model is overloaded or rate-limited, the app retries on `LLM_FALLBACK_MODEL` (`gemini-3.1-flash-lite`). If both fail, it says "The AI is busy" and Groq is the backup.
+- **Gemini free tier:** costs $0. Google lists `gemini-3.5-flash-lite` (the default here) as "Free of charge" on the free tier. Limits are shown at https://aistudio.google.com/rate-limit. They're plenty for a demo. If the main model is overloaded or rate-limited, the app retries on `LLM_FALLBACK_MODEL` (`gemini-3.1-flash-lite`, or a comma list of models, each with its own free quota). If all fail, chat shows the closest Kaplan knowledge-base pages, matched by keyword with no AI, labelled "AI is busy". Groq is the backup provider.
 - **Why Flash-Lite and not Flash:** when tested on 2026-11-01, `gemini-3.6-flash` and `gemini-3.8-flash` returned "high demand" (503) errors, while Flash-Lite answered in a few seconds and translated steps correctly.
 - **If you ever upgraded to paid:** Flash-Lite is $0.30 per 1M input tokens and $2.50 per 1M output tokens. Each question sends about 8k tokens (mostly the knowledge base), so it's roughly **S$0.005 per question**, or about S$5 per 1,000 questions. A plan or a staff draft costs about the same.
 - **Free-tier catch (put on the responsible-AI slide):** Google may use free-tier inputs to improve its products. That's why the app tells students not to type names, IDs or medical details.
@@ -121,12 +123,14 @@ When you have them: update the `steps` in each entry, set `"sample": false`, and
 | AI-drafted answers reach students unchecked | **Human approval gate.** Nothing from the review queue reaches students until staff approve it. Approved answers carry an "Approved by Student Services · date" badge. |
 | Staff rubber-stamp the AI | Each draft comes with risk flags (`no_source`, `conflicts_with:<id>`, `policy_sensitive`, `low_confidence`), each with a reason and % confidence. **Approve stays disabled until staff tick every flag.** The server adds `no_source` and `policy_sensitive` itself, so the AI can't skip them. |
 | Outdated info | Every card shows its source link and "last checked" date. Unverified steps are badged. |
-| Someone in crisis | A keyword check in 10+ languages runs **before** the AI, on chat, plan and queue text, and shows a fixed card. The AI's own crisis flag is a second net. An "Urgent help" button is always visible. It never tries to counsel. |
+| AI is busy or out of quota | Chat still answers: it shows the closest Kaplan knowledge-base pages, matched by keyword with no AI, labelled "AI is busy". Error messages point to **Urgent help**. The crisis card never needs the AI. |
+| Someone in crisis | A keyword check in 10+ languages (including phrasings like "kms", "unalive", 跳楼) runs **before** the AI, on chat, plan and queue text, and shows a fixed card. The AI's own crisis flag is a second net. An "Urgent help" button is always visible. It never tries to counsel. |
 | Privacy | No login, no chat history stored. Feedback logs only the rating, reason, a short comment and entry ids. A question is stored **only if the student taps "Send this question to Student Services"**: the question text alone, max 300 characters, no name, ID or IP. |
 | Translation errors | App and menu names stay in English so they match the screen. Crisis numbers never change. A Chinese speaker must still review the 中文 text. |
-| AI gets a fact wrong anyway | **A second AI checks every answer** against the entries it used (numbers, deadlines, contacts, links). A problem goes back for one fix; if it's still wrong, the student gets the original Kaplan steps instead. The page says which happened. If the checker itself fails, the answer shows without a "checked" claim. |
-| AI acts on the student's behalf | "Do it for me" never sends anything by itself: emails open in the student's own mail app for them to send, and reminders are a file they choose to add. Emails can only go to addresses in `knowledge.json` and use "[your name]" / "[student ID]" placeholders. The only automatic action is queueing a question for Student Services, the same opt-in as the button. |
-| Photos and voice | Never stored or logged. Checked on the server (type and size) before the AI sees them. The AI is told not to repeat names, IDs or NRIC/FIN it sees, and the crisis check also runs on what it read or heard. |
+| AI gets a fact wrong anyway | **A second AI checks answers in demo mode (`?demo=fail`); setting `CHECK_ALL=1` turns it on for every answer, which roughly doubles AI calls.** It checks against the entries the answer used (numbers, deadlines, contacts, links). A problem goes back for one fix; if it's still wrong, the student gets the original Kaplan steps instead. The page says which happened. If the checker itself fails, the answer shows without a "checked" claim. |
+| Wellbeing page | Calming breath, grounding, check-in, counselling booking and the buddy finder use **no AI and store nothing**. Buddy profiles are labelled samples, with a not-a-counsellor note. |
+| AI acts on the student's behalf | "Do it for me" (shown under the first card only) never sends anything by itself: emails open in the student's own mail app for them to send, and reminders are a file they choose to add. Emails can only go to addresses in `knowledge.json` and use "[your name]" / "[student ID]" placeholders. The only automatic action is queueing a question for Student Services, the same opt-in as the button. |
+| Photos and voice | The app says: "KampusCare doesn't keep your photo or voice clip; Google's Gemini reads it to answer." Never stored or logged by KampusCare. Checked on the server (type and size) before the AI sees them. The AI is told not to repeat names, IDs or NRIC/FIN it sees, and the crisis check also runs on what it read or heard. |
 | Open review page | **Right now /review.html has no password**, by the team's choice for the demo. Anyone with the link can approve. Keep it off the slides. Setting `STAFF_PASSWORD` locks it; production would use Kaplan staff SSO. |
 | Transparency | The footer labels the app as AI-assisted and names the model. |
 
@@ -150,18 +154,27 @@ Don't trash Ask K360. Frame it as: *"KampusCare shows how a student-support bot 
 
 ## 8. Demo script (5 minutes)
 
-1. **Sourced answer (45s):** tap "How do I see my classes?" → step card with source and date.
-2. **中文 (30s):** switch the header to 中文 → the start screen and topics change; ask "我生病了明天不能上课怎么办" → leave steps in Chinese, menu names in English.
-3. **Arrival plan (1 min):** "New international student? Get your first 2 weeks planned" → type *"I'm from China, starting a Murdoch degree on 20 Nov, under 18, staying in a hostel"* → show "What we understood about you", then Before you fly / Week 1 / Week 2 with the Murdoch contact and Moodle link. *"Same knowledge base, new user group, different output."*
-4. **Human decides (2 min):** ask "How do I print on campus?" → not covered → **Send this question to Student Services** → open review.html → paste the Kaplan page text → **Draft with AI** → flags appear, Approve is greyed out → tick each flag → edit a step → **Approve** → back in chat, ask again → answer with the "Approved by Student Services" badge.
-5. **Safety (15s):** tap "Urgent help". Don't type a crisis phrase live.
+We present **F1 Your User Changed** and **F3 No More Typing**. Everything else is "also built".
 
-Round 2: **No More Typing is the one we present.** The other two are extras if a judge asks (about 1 min each):
-- **No More Typing:** tap the camera, send a photo of a Kaplan notice or a Kaplan360 error (blur names and IDs) → "In your photo: …" then the steps. Or hold the mic and ask out loud → "You said: …".
-- **Make It Fail:** open **https://kampuscare.vercel.app/?demo=fail** → ask "I'm sick tomorrow, how do I apply for leave?" → "Demo: mistake injected · Caught and fixed by a second AI: step 5 said '7 working days'; the Kaplan page says 5" → the fixed answer. Say clearly that demo mode makes the first AI slip on purpose. It caught 8 of 9 in testing, so rehearse it.
-- **Make It Act:** on the leave answer, tap **Do it for me** → the AI chooses tools and shows each one: an email draft to the right Student Services team, a calendar reminder, a checklist. Point at "AI chose: …" on each card.
+1. **Verified answer (45s):** ask "Which clinic can I go to with my student insurance?" → step card with source and "last checked" date. (Don't open with the timetable: it carries the "unverified" badge.)
+2. **F1 arrival plan (1 min 30s):** "New international student? Get your first 2 weeks planned" → type *"I'm from China, starting a Murdoch degree on 20 Nov, under 18, staying in a hostel"* → show "What we understood about you", then Before you fly / Week 1 / Week 2 with the Murdoch contact and Moodle link. *"Same knowledge base, new user group, different output."*
+3. **F3 photo, then voice (1 min 30s):** tap the camera and send the prepared, blurred photo of a Kaplan notice → "In your photo: …" then the steps. Then **press and hold** the mic and say "How do I book a counsellor?" → "You said: …" → counselling card. *"It shows what it saw or heard, so you can check."*
+4. **Urgent help (15s):** tap "Urgent help". Don't type a crisis phrase live.
+5. **One line (15s):** *"Also built: human approval, AI self-check, tool use, wellbeing. Happy to show in Q&A."*
 
-Before the pitch, click "Reset demo" at the bottom of /review.html. **Always have a backup video**, recorded the night before.
+Keep `?demo=fail` and "Do it for me" out of the pitch unless a judge asks: each costs several AI calls. If a judge asks:
+- **Human Must Decide:** ask "How do I print on campus?" → not covered → **Send this question to Student Services** → review.html → paste the Kaplan page text → **Draft with AI** → tick each flag → **Approve** → ask again → "Approved by Student Services" badge.
+- **Make It Fail:** open **https://kampuscare.vercel.app/?demo=fail** → ask "I'm sick tomorrow, how do I apply for leave?" → "Demo: mistake injected · Caught and fixed by a second AI" → the fixed answer. Say clearly that demo mode makes the first AI slip on purpose. It caught 8 of 9 in testing.
+- **Make It Act:** tap **Do it for me** under the first card → email draft, calendar reminder, checklist, each showing "AI chose: …".
+
+See the "Before the pitch" checklist in [HACKATHON-PLAN.md](HACKATHON-PLAN.md). **Always have a backup video**, recorded the night before.
+
+## Wellbeing page
+
+A calm page, opened from "Feeling stressed?" on the start screen or from the counselling card. It uses **no AI and stores nothing**.
+- **Calming breath:** 3 patterns, a water-fill circle and an optional soft tone. Also 5-4-3-2-1 grounding and a "how do you feel?" check-in.
+- **Counselling booking:** illustrated steps for booking Kaplan counselling.
+- **Talk to a senior / student buddy:** clearly labelled **sample** profiles, with a note that buddies are not counsellors. The arrival plan links here.
 
 ## 9. Surprise features we built
 
@@ -170,8 +183,8 @@ Before the pitch, click "Reset demo" at the bottom of /review.html. **Always hav
 | **Your User Changed:** AI must understand a new user group's needs and generate output for them. | New user group: incoming international students. They describe themselves in free text; the AI shows "What we understood about you" (editable), then a Before you fly / Week 1 / Week 2 plan. Every item cites a knowledge-base entry with its source and checked date. It uses their programme's contact line and LMS link. Dates are suggested. Print / save as PDF. |
 | **Human Must Decide:** AI drafts and flags risk; a person decides. | Students opt in to send an unanswered question (or one they marked "Incorrect"). Staff paste the Kaplan page, AI drafts an entry with risk flags, staff tick every flag, then approve (with edits) or reject with a note. Nothing reaches students before approval. |
 | **No More Typing** *(Round 2)*: let people give a voice clip or photo; an AI model must understand it. | Camera button: a photo or screenshot (Kaplan360 error, letter, timetable, notice) is resized in the browser and read by Gemini. Hold-to-record mic: the clip is sent as WAV and Gemini hears it. The answer opens with "In your photo: …" / "You said: …", then the usual sourced steps, in English or 中文. |
-| **Make It Fail** *(Round 2)*: show your AI getting it wrong, and an AI check catching it. | A second Gemini call checks every answer against the entries it used. Wrong or invented facts go back for one fix and a re-check; anything still wrong falls back to the original Kaplan steps. `?demo=fail` makes the first AI slip in one labelled mistake so the catch can be shown live. |
-| **Make It Act** *(Round 2)*: AI must choose and call tools to complete a task. | "Do it for me" on any answer: Gemini picks from `draft_email` (allow-listed Kaplan addresses only), `add_reminder` (.ics file), `make_checklist` and `send_to_student_services`, runs up to 4 rounds, and each action card shows which tool it chose. The student sends the email and adds the reminder themselves. |
+| **Make It Fail** *(Round 2)*: show your AI getting it wrong, and an AI check catching it. | A second AI checks answers in demo mode (`?demo=fail`); setting `CHECK_ALL=1` turns it on for every answer, which roughly doubles AI calls. It checks against the entries the answer used. Wrong or invented facts go back for one fix and a re-check; anything still wrong falls back to the original Kaplan steps. `?demo=fail` makes the first AI slip in one labelled mistake so the catch can be shown live. |
+| **Make It Act** *(Round 2)*: AI must choose and call tools to complete a task. | "Do it for me" under the first card of an answer: Gemini picks from `draft_email` (allow-listed Kaplan addresses only), `add_reminder` (.ics file), `make_checklist` and `send_to_student_services`, runs up to 4 rounds, and each action card shows which tool it chose. The student sends the email and adds the reminder themselves. |
 
 Rules: one feature from Round 1 and one from Round 2 count for scoring. **We present Your User Changed (Round 1) and No More Typing (Round 2).** The other three are in the app as extras.
 
@@ -184,4 +197,4 @@ Kaplan360 integration (deep links into the app), LMS integration, staff SSO for 
 - **AI model in the app:** Google Gemini (`gemini-3.5-flash-lite`, fallback `gemini-3.1-flash-lite`) via the Gemini API free tier.
 - **Code:** most of it written by Claude Code (Opus) and Claude (Anthropic), reviewed and tested by the team.
 - **Knowledge base:** text adapted from Kaplan Singapore's public Student Handbook pages and the Oct 2026 Student Services contact PDF (sources on each entry). Chinese titles drafted by AI, pending review by a Chinese speaker.
-- **Photos and voice:** students' photos and voice clips are read by Gemini and not stored. No generated images, audio or video in the app. List any you add here.
+- **Photos and voice:** KampusCare doesn't keep students' photos or voice clips; Google's Gemini reads them to answer. No generated images, audio or video in the app. List any you add here.
