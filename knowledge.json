@@ -148,8 +148,7 @@
       "online materials",
       "course materials",
       "Moodle",
-      "portal",
-      "Access the LMS steps unverified"
+      "portal"
     ],
     "summary": "Study guides, assignment submission, exam rules and final grades are on the eLearn Learning Management System (LMS).",
     "steps": [
@@ -183,4 +182,369 @@
     ],
     "notes": "For academic records or certificate verification after graduating, email academicrecords.sg@kaplan.com.",
     "contact": "academicrecords.sg@kaplan.com",
-    "source
+    "source": "https://www.kaplan.com.sg/life-on-campus-student-handbook-student-policies",
+    "reviewed": "2026-11-01",
+    "sample": false
+  },
+  {
+    "id": "appeal",
+    "group": "Classes and exams",
+    "title": "Appeal against a result (Kaplan proprietary programmes)",
+    "keywords": [
+      "appeal",
+      "unfair grade",
+      "recheck",
+      "dispute result",
+      "failed"
+    ],
+    "summary": "Submit the Appeal Form with detailed reasons within 7 working days of results being released, and pay the appeal fee. Late or incomplete appeals are not accepted.",
+    "steps": [
+      "Get the Appeal Form from Student Services.",
+      "Write detailed reasons for your appeal.",
+      "Submit it within 7 working days of results release and pay the appeal fee."
+    ],
+    "notes": "University partner programmes follow the university's own appeal rules. Ask your Student Services team.",
+    "contact": "Student Services",
+    "source": "https://www.kaplan.com.sg/life-on-campus-student-handbook-student-policies",
+    "reviewed": "2026-11-01",
+    "sample": false
+  },
+  {
+    "id": "withdraw-defer",
+    "group": "Classes and exams",
+    "title": "Withdraw, defer or transfer your programme",
+    "keywords": [
+      "withdraw",
+      "quit",
+      "drop out",
+      "defer",
+      "take a break",
+      "transfer course",
+      "change programme",
+      "pause studies"
+    ],
+    "summary": "Tell Kaplan in writing (form, email or letter) with your reasons. Verbal notice is not accepted. You get a written outcome within 4 weeks; keep attending classes until then.",
+    "steps": [
+      "Contact your Student Services team and ask for the withdrawal, deferment or transfer form.",
+      "Submit it in writing with your reason. Settle any outstanding fees first.",
+      "Under 18? Get your parent or guardian's written consent.",
+      "Keep attending classes and stay in contact with Student Services until you receive the written outcome (within 4 weeks)."
+    ],
+    "notes": "Deferment: maximum 6 months for Kaplan proprietary programmes; valid reasons include poor academic performance, illness with MC, or compassionate circumstances. International students: deferment or transfer means your Student's Pass is cancelled and must be reapplied for (ICA and Kaplan charges apply). Withdrawing from a single module? University partner programmes have their own rules, so ask Student Services.",
+    "contact": "Student Services",
+    "source": "https://www.kaplan.com.sg/life-on-campus-student-handbook-student-policies",
+    "reviewed": "2026-11-01",
+    "sample": false
+  },
+  {
+    "id": "murdoch-enrolment",
+    "group": "Classes and exams",
+    "title": "Enrol in units for next term (Murdoch University)",
+    "keywords": [
+      "enrol",
+      "enrolment",
+      "choose units",
+      "select classes",
+      "Murdoch",
+      "next term"
+    ],
+    "summary": "Your first term's units are enrolled by your programme consultant. For later terms, select units and classes in the Kaplan Student Enrolment Portal about 1.5 to 2 months before the term starts. It is open for 3 to 4 weeks.",
+    "steps": [
+      "Watch for the enrolment portal opening (about 1.5 to 2 months before the new term).",
+      "Select your units and classes in the Kaplan Student Enrolment Portal. You can change them while it is open.",
+      "After enrolment closes, use the self-check link Kaplan sends you to confirm your classes.",
+      "Your valid units will also appear in the Murdoch University student portal."
+    ],
+    "notes": "Kaplan Diploma students who fail a module get a Re-Module App invitation at least a month before term and have 2 weeks to respond.",
+    "contact": "Murdoch Student Services: 6309 5772, merlinda.tan@kaplan.com",
+    "source": "https://www.kaplan.com.sg/current-students-handbook-student-support-services",
+    "reviewed": "2026-11-01",
+    "sample": false
+  },
+  {
+    "id": "insurance-clinic",
+    "group": "Health and wellbeing",
+    "title": "See a doctor using your student medical insurance",
+    "keywords": [
+      "doctor",
+      "clinic",
+      "GP",
+      "insurance",
+      "medical",
+      "hospital",
+      "fever",
+      "sick",
+      "MediHub",
+      "claim"
+    ],
+    "summary": "Student's Pass holders (and domestic students who opted in) are covered by Kaplan's group medical insurance. You pay a flat $5 to see an Income-affiliated GP.",
+    "steps": [
+      "Find an Income-affiliated GP clinic using the Howden MediHub outpatient manual (linked on the Student Support Services page).",
+      "Show your student details at the clinic and pay the $5 co-payment.",
+      "For hospital stays, follow the Howden MediHub inpatient manual.",
+      "Ask the doctor for an MC if you will miss class, then apply for leave in Kaplan360."
+    ],
+    "notes": "Coverage: up to S$30,000 a year in medical costs, at least a B1 ward in government and restructured hospitals, 24 hours in Singapore (overseas only for school activities, up to 180 days). Domestic opt-in excludes outpatient consultations. Emergency: call 995.",
+    "contact": "Student Services",
+    "source": "https://www.kaplan.com.sg/current-students-handbook-student-support-services",
+    "reviewed": "2026-11-01",
+    "sample": false
+  },
+  {
+    "id": "financial-help",
+    "group": "Money and admin",
+    "title": "Financial help (repayment plans, bursary, loans, scholarships)",
+    "keywords": [
+      "money",
+      "can't afford fees",
+      "financial difficulty",
+      "bursary",
+      "loan",
+      "scholarship",
+      "payment plan",
+      "fees"
+    ],
+    "summary": "Kaplan has a Repayment Assistance Scheme for students in financial difficulty, a Kaplan Bursary for Singaporean and PR students, education loans through banks, and several scholarships.",
+    "steps": [
+      "Repayment Assistance Scheme: apply through your programme consultant with supporting documents.",
+      "Kaplan Bursary (Singaporeans and PRs already studying): see the Kaplan Bursary Scheme page.",
+      "Education loan: submit your Letter of Offer and Student Contract with the bank's application form (see the bank education loan page)."
+    ],
+    "notes": "Unpaid fees lead to Bad Financial Standing: no enrolment, no LMS or Kaplan360 access, no results or graduation. Ask for help early.",
+    "contact": "Your programme consultant or Student Services",
+    "source": "https://www.kaplan.com.sg/current-students-handbook-student-support-services",
+    "reviewed": "2026-11-01",
+    "sample": false
+  },
+  {
+    "id": "transport-concession",
+    "group": "Money and admin",
+    "title": "Student concession card for buses and MRT",
+    "keywords": [
+      "concession",
+      "MRT",
+      "bus",
+      "transport",
+      "student card",
+      "travel pass",
+      "SimplyGo"
+    ],
+    "summary": "Only Singapore Citizens studying full-time in a degree programme of at least 24 months (or eligible IGCSE students aged 20 and below) qualify. Full-time Diploma students are not eligible.",
+    "steps": [
+      "Eligible students are notified by Kaplan by email. Or ask about eligibility at translink.sg@kaplan.com.",
+      "Apply through SimplyGo's PEI Student Concession Card page with a passport photo, NRIC, parent's NRIC and highest qualification certificate.",
+      "Processing takes 2 to 4 weeks. Pay $8.10 (Diploma/Degree) when you collect it.",
+      "Activate it at a SimplyGo Ticket Office with a minimum $5 top-up."
+    ],
+    "notes": "SimplyGo hotline: 1800 2255 663.",
+    "contact": "translink.sg@kaplan.com",
+    "source": "https://www.kaplan.com.sg/current-students-handbook-student-support-services",
+    "reviewed": "2026-11-01",
+    "sample": false
+  },
+  {
+    "id": "update-details",
+    "group": "Getting started",
+    "title": "Update your address, phone or email (and tell ICA if on a Student's Pass)",
+    "keywords": [
+      "change address",
+      "new phone number",
+      "update email",
+      "moved house",
+      "passport renewed",
+      "particulars"
+    ],
+    "summary": "Update your contact details in the Kaplan360 app. Student's Pass holders must also tell ICA within 14 days of changing address or passport.",
+    "steps": [
+      "Open Kaplan360 and update your contact details.",
+      "Student's Pass holders: update ICA at ica.gov.sg (Student's Pass, change of local address) within 14 days.",
+      "For parent or guardian details, contact Student Services."
+    ],
+    "notes": "If Kaplan can't reach you, you may miss timetable or exam changes.",
+    "contact": "Student Services",
+    "source": "https://www.kaplan.com.sg/life-on-campus-student-handbook-administrative-matters",
+    "reviewed": "2026-11-01",
+    "sample": false
+  },
+  {
+    "id": "new-international",
+    "group": "Getting started",
+    "title": "New international student arrival (airport pickup, Reporting Day, accommodation)",
+    "keywords": [
+      "arriving",
+      "airport",
+      "pickup",
+      "international student",
+      "accommodation",
+      "hostel",
+      "Reporting Day",
+      "bank account",
+      "new to Singapore"
+    ],
+    "summary": "New full-time international students get a free airport pickup (submit the form 7 days before arriving), a Reporting Day briefing before orientation, and help with accommodation.",
+    "steps": [
+      "Submit the airport pickup form at least 7 days before you arrive (Changi T1 to T4, Harbourfront, Woodlands). No pickups on public holidays or 11pm to 7am.",
+      "Attend Reporting Day for briefings on Student's Pass collection, the medical check-up, your contract, refunds and insurance.",
+      "Accommodation: see the Accommodation Services Guide. Kaplan partner hostels and homestays are optional.",
+      "Students from China, Hong Kong, Indonesia and Malaysia can open an OCBC account before arriving."
+    ],
+    "notes": "There is a 10 calendar day cooling-off period on your contract.",
+    "contact": "Your programme consultant",
+    "source": "https://www.kaplan.com.sg/international-applicants-student-services",
+    "reviewed": "2026-11-01",
+    "sample": false
+  },
+  {
+    "id": "student-services-contacts",
+    "group": "Money and admin",
+    "title": "Student Services contacts by programme",
+    "keywords": [
+      "contact",
+      "who do I ask",
+      "student services",
+      "email",
+      "phone number",
+      "programme consultant"
+    ],
+    "summary": "Each programme has its own Student Services team. Phone lines are open Monday to Friday (hours vary by programme) and email replies take 2 to 3 working days.",
+    "steps": [
+      "Kaplan Diploma: 6309 5202, diploma.sg@kaplan.com (Mon to Fri, 8.30am to 5.30pm)",
+      "Foundation Diploma: 6309 5759, kfd.sg@kaplan.com",
+      "Murdoch University: 6309 5772, merlinda.tan@kaplan.com (Mon to Fri, 9am to 7pm)",
+      "University College Dublin, full-time: 6496 5677, ucd-ftdegree.sg@kaplan.com. Part-time: 6411 4354, ucd-ptdegree.sg@kaplan.com",
+      "Northumbria business degrees: 6309 7499, ntb-buzdegree.sg@kaplan.com",
+      "Birmingham City University: 6496 5423, bcu-degree.sg@kaplan.com",
+      "University of Portsmouth: 6309 5233, uop-degree.sg@kaplan.com",
+      "Monash University: 6411 4579, mon-ug.sg@kaplan.com"
+    ],
+    "notes": "The full list, including postgraduate and Kaplan Financial, is in the Student Services contact list PDF (updated October 2026). General enquiries: +65 6733 1877.",
+    "contact": "General enquiries: +65 6733 1877",
+    "source": "https://www.kaplan.com.sg/files/2026-10/student-services-contact-list-Oct26.pdf",
+    "reviewed": "2026-11-01",
+    "sample": false
+  },
+  {
+    "id": "campuses",
+    "group": "Getting started",
+    "title": "Campus locations and opening hours",
+    "keywords": [
+      "campus",
+      "address",
+      "where",
+      "Wilkie Edge",
+      "Odeon",
+      "opening hours",
+      "how to get there"
+    ],
+    "summary": "Kaplan has three city campuses: Wilkie Edge, Odeon 331 and Odeon 333. All open Monday to Friday 9am to 8pm and Saturday 9am to 3pm, and are closed on Sundays and public holidays.",
+    "steps": [
+      "Wilkie Edge: 8 Wilkie Road, Level 2, Singapore 228095 (Level 5 reception opens from 8.15am)",
+      "Odeon 331: 331 North Bridge Road, Level 8, Singapore 188720",
+      "Odeon 333: 333 North Bridge Road, Level 2, Singapore 188721"
+    ],
+    "notes": "General enquiries: +65 6733 1877.",
+    "contact": "+65 6733 1877",
+    "source": "https://www.kaplan.com.sg/contact-us",
+    "reviewed": "2026-11-01",
+    "sample": false
+  },
+  {
+    "id": "campus-emergency",
+    "group": "Health and wellbeing",
+    "title": "First aid, fire or safety hazard on campus",
+    "keywords": [
+      "first aid",
+      "injured",
+      "fire",
+      "hazard",
+      "accident on campus",
+      "fainted"
+    ],
+    "summary": "For life-threatening situations call 995 immediately. For first aid or safety hazards, call the campus line.",
+    "steps": [
+      "Life-threatening: call 995 (ambulance or fire). Police: 999.",
+      "Wilkie Edge: +65 6496 5981",
+      "Odeon 331: +65 6411 4359",
+      "Odeon 333: +65 6309 7481",
+      "When reporting, say who you are, where (building, level, room), when, and what happened."
+    ],
+    "notes": "During a fire alarm, follow the PA announcements and use the stairs, not the lifts.",
+    "contact": "995 for emergencies",
+    "source": "https://www.kaplan.com.sg/contact-us",
+    "reviewed": "2026-11-01",
+    "sample": false
+  },
+  {
+    "id": "disability-support",
+    "group": "Health and wellbeing",
+    "title": "Support for disabilities or special educational needs",
+    "keywords": [
+      "disability",
+      "special needs",
+      "dyslexia",
+      "ADHD",
+      "extra exam time",
+      "wheelchair",
+      "accommodation for exams"
+    ],
+    "summary": "Kaplan can arrange support such as alternative exam arrangements, extra time or help with mobility around campus, based on medical documentation.",
+    "steps": [
+      "Tell Student Services about your needs.",
+      "Submit up-to-date medical documentation to Admissions-Assessment and Student Wellbeing & Counselling.",
+      "Attend an academic accommodation assessment session to agree on your support."
+    ],
+    "notes": "The support available is subject to university partner policies.",
+    "contact": "Student Services",
+    "source": "https://www.kaplan.com.sg/current-students-handbook-student-support-services",
+    "reviewed": "2026-11-01",
+    "sample": false
+  },
+  {
+    "id": "feedback-grievance",
+    "group": "Money and admin",
+    "title": "Give feedback or make a complaint",
+    "keywords": [
+      "complaint",
+      "feedback",
+      "unhappy",
+      "grievance",
+      "dispute",
+      "escalate"
+    ],
+    "summary": "Raise the issue with the relevant department or Student Services first. You can also email feedback.sg@kaplan.com at any time. Complaints must include your name and student ID; anonymous complaints are not handled.",
+    "steps": [
+      "Raise it directly with the relevant department or your Student Services team.",
+      "Or email feedback.sg@kaplan.com with your full name, student ID, intake code and programme.",
+      "Not resolved? Escalate to the Student Services directors listed in the contact list PDF."
+    ],
+    "notes": "",
+    "contact": "feedback.sg@kaplan.com",
+    "source": "https://www.kaplan.com.sg/life-on-campus-student-handbook-student-policies",
+    "reviewed": "2026-11-01",
+    "sample": false
+  },
+  {
+    "id": "clubs",
+    "group": "Health and wellbeing",
+    "title": "Join student clubs and activities",
+    "keywords": [
+      "clubs",
+      "CCA",
+      "make friends",
+      "activities",
+      "events",
+      "student life",
+      "lonely"
+    ],
+    "summary": "Student Engagement and Advancement runs clubs, events and leadership programmes.",
+    "steps": [
+      "Browse clubs on the Kaplan Student Clubs page (https://www.kaplan.com.sg/student-engagement-student-clubs).",
+      "Email sea@kaplan.com to ask about joining or starting a club."
+    ],
+    "notes": "",
+    "contact": "sea@kaplan.com",
+    "source": "https://www.kaplan.com.sg/student-engagement-student-clubs",
+    "reviewed": "2026-11-01",
+    "sample": false
+  }
+]
