@@ -155,7 +155,7 @@ const STRINGS = {
     crisis: {
       title: "You don't have to go through this alone",
       intro: 'If you are in danger or thinking about ending your life, please reach out now. Someone is available 24 hours a day:',
-      emergency: 'Emergency: ', sos: 'Samaritans of Singapore (SOS): ', or: ', or WhatsApp ', imh: 'IMH Mental Health Helpline: ',
+      emergency: 'Emergency: ', sos: 'Samaritans of Singapore (SOS): ', or: ', or WhatsApp ', imh: 'mindline (national mental health helpline): ',
       after: 'When you\'re ready, Kaplan\'s counsellors can help too: Kaplan360 → "Academic" → "Counselling".',
     },
     plan: {
@@ -202,7 +202,7 @@ const STRINGS = {
     crisis: {
       title: '你不需要独自面对这一切',
       intro: '如果你正处于危险中，或有结束生命的念头，请现在就寻求帮助。以下热线 24 小时都有人接听：',
-      emergency: '紧急情况：', sos: 'Samaritans of Singapore (SOS)：', or: '，或 WhatsApp ', imh: 'IMH Mental Health Helpline：',
+      emergency: '紧急情况：', sos: 'Samaritans of Singapore (SOS)：', or: '，或 WhatsApp ', imh: 'mindline（全国心理健康热线）：',
       after: '等你准备好了，Kaplan 的心理辅导员也可以帮助你：Kaplan360 → "Academic" → "Counselling"。',
     },
     plan: {
@@ -248,7 +248,8 @@ function showCrisis(into) {
   const li = (...parts) => { const x = el('li'); x.append(...parts); return x; };
   ul.append(li(c.emergency, a('tel:995', '995')),
     li(c.sos, a('tel:1767', '1767'), c.or, a('https://wa.me/6591511767', '9151 1767')),
-    li(c.imh, a('tel:63892222', '6389 2222')));
+    // IMH's 6389 2222 was retired for mindline 1771 (June 2025; forwarding ended 30 Sep 2025).
+    li(c.imh, a('tel:1771', '1771'), c.or, a('https://wa.me/6566691771', '6669 1771')));
   d.append(el('h3', null, c.title), el('p', null, c.intro), ul, el('p', null, c.after));
   into.append(d); scroll();
 }

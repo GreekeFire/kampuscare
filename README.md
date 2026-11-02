@@ -58,7 +58,7 @@ Vercel serves the two HTML pages and runs `api/*.js` as serverless functions, so
 
 ```
 Student ──► index.html ──► /api/chat ──► 1. Crisis keyword check (no AI involved)
-                │                         │     └─ match → fixed crisis card (SOS 1767, 995, IMH)
+                │                         │     └─ match → fixed crisis card (SOS 1767, 995, mindline 1771)
                 │                         ├─ 2. Gemini + knowledge.json + staff-approved answers in the prompt
                 │                         └─ 3. Server builds the cards (contacts, links, dates never come from the AI)
                 ├──────────► /api/plan ──► arrival plan, same checks, items must cite knowledge-base ids
@@ -122,7 +122,7 @@ When you have them: update the `steps` in each entry, set `"sample": false`, and
 | Open review page | **Right now /review.html has no password**, by the team's choice for the demo. Anyone with the link can approve. Keep it off the slides. Setting `STAFF_PASSWORD` locks it; production would use Kaplan staff SSO. |
 | Transparency | The footer labels the app as AI-assisted and names the model. |
 
-**Verify before demo day:** the crisis card numbers (995, SOS 1767, SOS CareText 9151 1767, IMH 6389 2222). Call or check the official sites. These are in `index.html`.
+**Crisis numbers** (checked 2 Nov 2026, in `index.html`): 995, SOS 1767 / WhatsApp 9151 1767, mindline 1771 / WhatsApp 6669 1771. IMH's old 6389 2222 was retired when mindline launched in June 2025.
 
 ## 7. Pitch: how we differ from Ask K360
 

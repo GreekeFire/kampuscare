@@ -39,16 +39,18 @@ A "Contacts" group with one entry per university/programme from the Oct 2026 Stu
 
 ## Step 5: Polish and pitch (remaining)
 
-- [ ] A Chinese speaker reviews `STRINGS.zh` in `index.html` and every `title_zh` in `knowledge.json`
-- [ ] Verify the crisis numbers (995, SOS 1767, SOS CareText 9151 1767, IMH 6389 2222)
-- [ ] Screenshots, see [SCREENSHOTS.md](SCREENSHOTS.md)
-- [ ] Ask K360 head-to-head test, see [PITCH-NOTES.md](PITCH-NOTES.md)
-- [ ] Record the backup demo video (README section 8)
-- [ ] Deck: problem → solution → live demo → surprise features 1 and 2 → architecture → responsible AI → impact → next steps
-- [ ] Rehearse twice
+**Builder (tech):**
+- [x] Crisis numbers checked 2 Nov 2026: 995, SOS 1767 / WhatsApp 9151 1767, mindline 1771 / WhatsApp 6669 1771 (IMH 6389 2222 is retired)
 - [ ] Clear the review queue before the pitch
 - [ ] Make the repo public or invite the judges
 - [ ] Rotate the Gemini key after the hackathon
+
+**Team (pitch):**
+- [ ] A Chinese speaker reviews `STRINGS.zh` in `index.html` and every `title_zh` in `knowledge.json` (later)
+- [ ] Ask K360 head-to-head test, see [PITCH-NOTES.md](PITCH-NOTES.md)
+- [ ] Deck: problem → solution → live demo → surprise features 1 and 2 → architecture → responsible AI → impact → next steps
+- [ ] Record the backup demo video (README section 8)
+- [ ] Rehearse twice
 
 ## Model / budget notes
 
