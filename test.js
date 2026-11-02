@@ -1,7 +1,7 @@
 // `node test.js`: checks the crisis filter and that every knowledge-base entry is complete.
 import assert from 'node:assert';
 import { readFileSync } from 'node:fs';
-import { cleanFeedback, knowledge, toCards } from './api/chat.js';
+import { cleanFeedback, knowledge, toCards, validMedia } from './api/chat.js';
 import { isCrisis, saveQueue } from './lib/shared.js';
 import { cleanEntry, cleanFlags } from './api/review.js';
 import { toPlan, programmeContact } from './api/plan.js';
@@ -14,6 +14,13 @@ for (const s of ['how do I send my assignment', 'this exam will kill me lol', 'w
 const fb = cleanFeedback({ feedback: 'down', reason: 'hacked', comment: 'x'.repeat(500), message: 'secret question', ids: ['a', 'b', 'c', 'd'] });
 assert(fb.reason === undefined && fb.comment.length === 200 && fb.ids.length === 3 && !('message' in fb), 'feedback sanitised');
 assert(cleanFeedback({ feedback: 'down', reason: 'incorrect' }).reason === 'incorrect', 'allowed reason kept');
+
+// Photo / voice validation at the trust boundary.
+for (const t of ['jpeg', 'png', 'webp']) assert(validMedia('image', `data:image/${t};base64,iVBORw0KGgo=`), `accepts ${t}`);
+for (const v of ['data:image/gif;base64,R0lGOD', 'data:image/svg+xml;base64,PHN2Zz4=', 'data:text/html;base64,PGI+', 'https://evil.com/a.png', 'iVBORw0KGgo=',
+  'data:image/png;base64,abc<script>', `data:image/jpeg;base64,${'A'.repeat(4_000_000)}`, 42, {}])
+  assert(!validMedia('image', v), `rejects image: ${String(v).slice(0, 40)}`);
+assert(validMedia('audio', 'data:audio/wav;base64,UklGRg==') && !validMedia('audio', 'data:audio/webm;base64,GkXf') && !validMedia('audio', `data:audio/wav;base64,${'A'.repeat(1_300_000)}`), 'audio: wav only, ~30 s cap');
 
 const kb = JSON.parse(readFileSync(new URL('./knowledge.json', import.meta.url), 'utf8'));
 const ids = new Set();

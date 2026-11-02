@@ -96,6 +96,17 @@
   form button { height:48px; background:var(--accent); color:#fff; border:0; border-radius:8px; padding:0 20px; font:inherit; font-weight:600; cursor:pointer; }
   form button:disabled { opacity:.45; cursor:wait; }
   form p { max-width:760px; margin:6px auto 0; font-size:12px; color:var(--muted); }
+  /* Surprise feature 3: photo and voice */
+  form .icon { flex:none; width:44px; padding:0; display:grid; place-items:center; background:#fff; color:var(--ink); border:1px solid #cfcbc1; touch-action:none; -webkit-user-select:none; user-select:none; }
+  form .icon:hover { border-color:var(--ink); }
+  form .icon.rec { color:#fff; background:var(--red); border-color:var(--red); }
+  form .icon[hidden], .thumb[hidden] { display:none; }
+  .thumb { position:relative; flex:none; }
+  .thumb img { display:block; width:48px; height:48px; object-fit:cover; border-radius:6px; border:1px solid var(--rule); }
+  form .thumb button { position:absolute; top:-7px; right:-7px; width:22px; height:22px; padding:0; border-radius:50%; background:var(--ink); font-size:12px; line-height:1; }
+  .shot { display:block; max-width:180px; max-height:180px; margin:28px 0 0; border-radius:6px; border:1px solid var(--rule); }
+  .shot + .me { margin-top:8px; }
+  .seen { margin:0 0 6px; font-size:14px; color:var(--muted); }
 </style>
 </head>
 <body>
@@ -123,9 +134,15 @@
 
 <form id="form">
   <div>
+    <!-- No "capture" attribute, so phones offer both the camera and the gallery. -->
+    <input type="file" id="photo" accept="image/*" hidden>
+    <button type="button" class="icon" id="photo-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13.5" r="3.5"/></svg></button>
+    <span class="thumb" id="thumb" hidden><img alt=""><button type="button" id="unphoto">✕</button></span>
+    <button type="button" class="icon" id="mic" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
     <textarea id="input" rows="1" maxlength="1000"></textarea>
     <button id="send"></button>
   </div>
+  <p id="note" hidden></p>
   <p id="footer"></p>
 </form>
 
@@ -152,6 +169,12 @@ const STRINGS = {
     checked: 'checked', source: 'source',
     offline: "Couldn't reach KampusCare. Check your connection and try again.",
     serverErrors: {},
+    photo: 'Add a photo or screenshot', removePhoto: 'Remove photo', defaultQ: 'What does this mean and what should I do?',
+    photoHint: "Crop out your name, student ID and photo before sending. Photos aren't stored.",
+    photoTooBig: 'That photo is still too large after shrinking. Try cropping it or sending a screenshot.', photoBad: "That file couldn't be opened as a photo.",
+    seen: 'In your photo: ', heard: 'You said: ', voiceMsg: '🎤 Voice message',
+    mic: 'Hold to ask by voice (up to 30 seconds)', recording: 'Recording… release to send.',
+    micDenied: "Couldn't use the microphone. Check your browser's permission and try again.", micBad: "Couldn't read that recording. Please try again.",
     crisis: {
       title: "You don't have to go through this alone",
       intro: 'If you are in danger or thinking about ending your life, please reach out now. Someone is available 24 hours a day:',
@@ -198,7 +221,15 @@ const STRINGS = {
       'Tell us a little about yourself first.': '请先简单介绍一下你自己。',
       'Student Services has a lot of questions right now. Please call +65 6733 1877.': '学生服务处目前收到的问题很多，请致电 +65 6733 1877。',
       'The review queue is unavailable right now. Please try again.': '暂时无法提交，请稍后再试。',
+      "That photo couldn't be read. Try a JPEG or PNG under 3 MB.": '无法读取这张照片。请用 3 MB 以内的 JPEG 或 PNG。',
+      "That voice message couldn't be read. Keep it under 30 seconds.": '无法读取这条语音。请控制在 30 秒以内。',
     },
+    photo: '添加照片或截图', removePhoto: '移除照片', defaultQ: '这是什么意思？我该怎么做？',
+    photoHint: '发送前请裁掉你的姓名、学号和照片。照片不会被保存。',
+    photoTooBig: '照片压缩后仍然太大。请裁剪一下，或改发截图。', photoBad: '无法把这个文件当作照片打开。',
+    seen: '照片内容：', heard: '你说的是：', voiceMsg: '🎤 语音消息',
+    mic: '按住用语音提问（最长 30 秒）', recording: '正在录音…松开即发送。',
+    micDenied: '无法使用麦克风。请检查浏览器权限后再试。', micBad: '无法读取这段录音，请再试一次。',
     crisis: {
       title: '你不需要独自面对这一切',
       intro: '如果你正处于危险中，或有结束生命的念头，请现在就寻求帮助。以下热线 24 小时都有人接听：',
@@ -233,6 +264,9 @@ const sendBtn = document.getElementById('send');
 const langSel = document.getElementById('lang');
 const history = [];
 let kb = null;
+const photoInput = document.getElementById('photo'), photoBtn = document.getElementById('photo-btn'), micBtn = document.getElementById('mic');
+const thumb = document.getElementById('thumb'), unphoto = document.getElementById('unphoto'), note = document.getElementById('note');
+let photo = null; // the attached photo as a resized JPEG data URL; sent once, never kept in history
 
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const scroll = () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
@@ -287,6 +321,10 @@ function applyLang() {
   document.getElementById('urgent').textContent = t.urgent;
   input.placeholder = t.placeholder; input.setAttribute('aria-label', t.inputLabel);
   sendBtn.textContent = t.ask;
+  photoBtn.setAttribute('aria-label', t.photo); photoBtn.title = t.photo;
+  unphoto.setAttribute('aria-label', t.removePhoto);
+  micBtn.setAttribute('aria-label', t.mic); micBtn.title = t.mic;
+  if (photo) showNote(t.photoHint);
   document.getElementById('footer').textContent = t.footer;
   if (document.getElementById('headline')) {
     document.getElementById('headline').textContent = t.headline;
@@ -371,25 +409,32 @@ function feedback(ids, question) {
   return f;
 }
 
-async function ask(text) {
+// audio: a WAV data URL from the mic button. An attached photo goes with whatever is sent next.
+async function ask(text, audio) {
   text = text.trim();
-  if (!text || sendBtn.disabled) return;
+  const image = photo;
+  if ((!text && !image && !audio) || sendBtn.disabled) return;
   const t = S();
+  if (!text && image && !audio) text = t.defaultQ;
   document.getElementById('intro')?.remove();
   document.getElementById('back').hidden = false;
-  chat.append(el('p', 'me', text));
+  if (image) { const img = el('img', 'shot'); img.src = image; img.alt = ''; chat.append(img); }
+  chat.append(el('p', 'me', text || t.voiceMsg));
   const bot = el('div'); bot.append(el('p', 'thinking', t.thinking)); chat.append(bot); scroll();
-  input.value = ''; sendBtn.disabled = true;
+  input.value = ''; sendBtn.disabled = true; attach(null);
   try {
-    const data = await (await post('/api/chat', { message: text, history, lang })).json();
+    const data = await (await post('/api/chat', { message: text, image, audio, history, lang })).json();
     bot.textContent = '';
     if (data.crisis) return showCrisis(bot);
     if (data.error) { bot.append(errText(data.error)); return; }
+    if (data.seen) bot.append(el('p', 'seen', (image ? t.seen : t.heard) + data.seen));
     bot.append(el('p', 'reply', data.reply || ''));
     data.cards.forEach((c) => bot.append(answer(c)));
-    if (!data.cards.length) bot.append(el('p', 'none', t.notCovered), offerReview(text));
-    bot.append(feedback(data.cards.map((c) => c.id), text));
-    history.push({ role: 'user', content: text }, { role: 'assistant', content: data.reply + ' [' + data.cards.map((c) => c.id).join(', ') + ']' });
+    const question = text || data.seen;
+    if (!data.cards.length) bot.append(el('p', 'none', t.notCovered), offerReview(question));
+    bot.append(feedback(data.cards.map((c) => c.id), question));
+    // The photo itself never goes into history, only a "[photo]" marker.
+    history.push({ role: 'user', content: (image ? '[photo] ' : '') + question }, { role: 'assistant', content: data.reply + ' [' + data.cards.map((c) => c.id).join(', ') + ']' });
   } catch {
     bot.textContent = ''; bot.append(el('p', 'err', t.offline));
   } finally { sendBtn.disabled = false; input.focus(); scroll(); }
@@ -486,6 +531,79 @@ function renderPlan(out, data, regenerate) {
   print.type = 'button'; print.onclick = () => window.print();
   actions.append(print); out.append(actions);
 }
+
+// Surprise feature 3: ask with a photo or your voice. The AI reads it; the answer still comes only from the knowledge base.
+function showNote(text, isErr) { note.textContent = text || ''; note.className = isErr ? 'err' : ''; note.hidden = !text; }
+function attach(url) {
+  photo = url; thumb.hidden = !url; thumb.querySelector('img').src = url || '';
+  showNote(url && S().photoHint);
+}
+
+// Longest side 1280px, JPEG quality 0.8: a phone photo drops to a few hundred KB, well under Vercel's 4.5 MB limit.
+async function shrink(file) {
+  const bmp = await createImageBitmap(file);
+  const k = Math.min(1, 1280 / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas');
+  c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); // transparent PNGs → white, not black
+  g.drawImage(bmp, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', 0.8);
+}
+photoBtn.onclick = () => photoInput.click();
+unphoto.onclick = () => { attach(null); photoBtn.focus(); };
+photoInput.onchange = async () => {
+  const file = photoInput.files[0]; photoInput.value = '';
+  if (!file) return;
+  attach(null);
+  try {
+    const url = await shrink(file);
+    if (url.length > 3e6) return showNote(S().photoTooBig, true);
+    attach(url); input.focus();
+  } catch { showNote(S().photoBad, true); }
+};
+
+// Hold to record. MediaRecorder gives webm/mp4, which Gemini's OpenAI-compatible endpoint rejects (wav/mp3 only),
+// so the clip is decoded and re-encoded as 16 kHz mono 16-bit WAV: ~1 MB for 30 s.
+const RATE = 16000, MAX_S = 30;
+const dataUrl = (blob) => new Promise((ok, fail) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = fail; r.readAsDataURL(blob); });
+async function toWav(blob) {
+  const pcm = (await new OfflineAudioContext(1, 1, RATE).decodeAudioData(await blob.arrayBuffer())).getChannelData(0);
+  const n = Math.min(pcm.length, RATE * MAX_S), v = new DataView(new ArrayBuffer(44 + n * 2));
+  const str = (at, s) => [...s].forEach((ch, i) => v.setUint8(at + i, ch.charCodeAt(0)));
+  str(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); str(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, RATE, true); v.setUint32(28, RATE * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); str(36, 'data'); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, pcm[i])) * 0x7fff, true);
+  return dataUrl(new Blob([v], { type: 'audio/wav' }));
+}
+let rec = null;
+async function startRec() {
+  if (rec || sendBtn.disabled) return;
+  const r = rec = { stop: false };
+  try { r.stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch { rec = null; return showNote(S().micDenied, true); }
+  if (r.stop) { r.stream.getTracks().forEach((tr) => tr.stop()); rec = null; return; } // released while the permission prompt was up
+  const chunks = [], m = r.m = new MediaRecorder(r.stream), started = Date.now();
+  m.ondataavailable = (e) => chunks.push(e.data);
+  m.onstop = async () => {
+    r.stream.getTracks().forEach((tr) => tr.stop()); rec = null; micBtn.classList.remove('rec'); showNote(photo && S().photoHint);
+    if (Date.now() - started < 600) return; // a tap, not a question
+    let wav;
+    try { wav = await toWav(new Blob(chunks, { type: m.mimeType })); } catch { return showNote(S().micBad, true); }
+    ask(input.value, wav);
+  };
+  m.start(); micBtn.classList.add('rec'); showNote(S().recording);
+  r.timer = setTimeout(stopRec, MAX_S * 1000);
+}
+function stopRec() {
+  if (!rec) return;
+  rec.stop = true; clearTimeout(rec.timer);
+  if (rec.m?.state === 'recording') rec.m.stop();
+}
+micBtn.hidden = !(window.MediaRecorder && navigator.mediaDevices?.getUserMedia && window.OfflineAudioContext);
+micBtn.onpointerdown = (e) => { e.preventDefault(); micBtn.setPointerCapture(e.pointerId); startRec(); };
+micBtn.onpointerup = micBtn.onpointercancel = stopRec;
+micBtn.oncontextmenu = (e) => e.preventDefault(); // long-press menu on phones
+micBtn.onkeydown = (e) => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); startRec(); } };
+micBtn.onkeyup = (e) => { if (e.key === ' ' || e.key === 'Enter') stopRec(); };
 
 document.getElementById('plan-open').onclick = openPlan;
 form.onsubmit = (e) => { e.preventDefault(); ask(input.value); };
