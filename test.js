@@ -1,7 +1,7 @@
 // `node test.js`: checks the crisis filter and that every knowledge-base entry is complete.
 import assert from 'node:assert';
 import { readFileSync } from 'node:fs';
-import { cleanFeedback, knowledge, toCards, validMedia } from './api/chat.js';
+import { cleanFeedback, knowledge, toCards, validMedia, checkerInput, cleanCheck, contain } from './api/chat.js';
 import { isCrisis, saveQueue } from './lib/shared.js';
 import { cleanEntry, cleanFlags } from './api/review.js';
 import { toPlan, programmeContact } from './api/plan.js';
@@ -79,5 +79,21 @@ const [zhCard, zhApproved] = toCards([{ id: 'counselling' }, { id: 'approved-a1'
 assert(zhCard.title === kb[0].title_zh && zhApproved.title === 'Print on campus', 'zh card titles: title_zh, approved entries keep English');
 assert(toCards([{ id: 'counselling' }], merged.byId, 'xx')[0].title === kb[0].title, 'unknown lang falls back to English title');
 await saveQueue([]);
+
+// Make It Fail: checker input, verdict normalising, containment.
+const leaveKb = kb.find((e) => e.id === 'leave');
+const bad = toCards([{ id: 'leave', why: 'w', steps: ['Open Kaplan360.', 'Submit within 10 working days.'], notes: 'n' }, { id: 'counselling', why: 'c', steps: ['ok'] }], merged.byId);
+const ci = checkerInput('Hi', bad, merged.byId);
+assert(ci.reply === 'Hi' && ci.answers.length === 2 && ci.answers[0].answer.steps[1].includes('10') && String(ci.answers[0].kb.steps) === String(leaveKb.steps) && !('source' in ci.answers[0].kb), 'checker input: only matched entries');
+for (const g of [undefined, null, 'garbage', {}, { ok: 'nope' }, { ok: false }, { ok: false, problems: 'x' }, { ok: false, problems: [{ id: 'made-up', field: 'steps[0]' }] }])
+  assert.deepStrictEqual(cleanCheck(g, ['leave']), { ok: true, problems: [] }, `garbage passes: ${JSON.stringify(g)}`);
+const verdict = cleanCheck({ ok: false, problems: [{ id: 'leave', field: 'steps[1]', wrong: '10 working days', kb_says: '5 working days', reason: 'r' }, { id: 'nope', field: 'notes' }] }, ['leave', 'counselling']);
+assert(cleanCheck({ ok: false, problems: [{ id: 'leave', field: 'reply', type: 'dropped' }, { id: 'leave', field: 'why', type: 'dropped' }] }, ['leave']).ok, 'omissions in reply/why ignored');
+assert(!cleanCheck({ ok: false, problems: [{ id: 'leave', field: 'notes', type: 'dropped' }] }, ['leave']).ok, 'dropped caveat in notes kept');
+assert(!verdict.ok && verdict.problems.length === 1 && verdict.problems[0].kb_says === '5 working days', 'unknown ids dropped');
+const held = contain('Hi', bad, verdict.problems, merged.byId);
+assert(String(held.cards[0].steps) === String(leaveKb.steps) && held.cards[0].notes === leaveKb.notes && held.cards[0].why === '' && held.cards[1].steps[0] === 'ok' && held.reply === 'Hi', 'bad card back to KB steps, good card kept');
+const noReply = contain('Call 9999', bad, [{ id: 'leave', field: 'reply' }], merged.byId);
+assert(noReply.reply === '' && noReply.cards[0].steps[1].includes('10'), 'bad reply dropped, cards kept');
 
 console.log(`ok: crisis filter, plan filter, review queue + ${kb.length} knowledge entries`);

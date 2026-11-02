@@ -107,6 +107,9 @@
   .shot { display:block; max-width:180px; max-height:180px; margin:28px 0 0; border-radius:6px; border:1px solid var(--rule); }
   .shot + .me { margin-top:8px; }
   .seen { margin:0 0 6px; font-size:14px; color:var(--muted); }
+  .check { margin:0 0 12px; font-size:13px; color:var(--muted); }
+  .check.caught { padding:8px 10px; border-radius:4px; background:var(--warn-bg); color:var(--warn); }
+  .check ul { margin:4px 0 0; padding-left:18px; }
 </style>
 </head>
 <body>
@@ -173,6 +176,8 @@ const STRINGS = {
     photoHint: "Crop out your name, student ID and photo before sending. Photos aren't stored.",
     photoTooBig: 'That photo is still too large after shrinking. Try cropping it or sending a screenshot.', photoBad: "That file couldn't be opened as a photo.",
     seen: 'In your photo: ', heard: 'You said: ', voiceMsg: '🎤 Voice message',
+    check: { passed: '✓ Checked against the Kaplan pages by a second AI', fixed: 'Caught and fixed by a second AI:', contained: "Couldn't verify the AI's wording, so here are the original Kaplan steps.",
+      caught: (where, wrong, kb) => `${where} said "${wrong}"; the Kaplan page says ${kb}.`, step: (n) => `step ${n}`, demo: 'Demo: mistake injected' },
     mic: 'Hold to ask by voice (up to 30 seconds)', recording: 'Recording… release to send.',
     micDenied: "Couldn't use the microphone. Check your browser's permission and try again.", micBad: "Couldn't read that recording. Please try again.",
     crisis: {
@@ -228,6 +233,8 @@ const STRINGS = {
     photoHint: '发送前请裁掉你的姓名、学号和照片。照片不会被保存。',
     photoTooBig: '照片压缩后仍然太大。请裁剪一下，或改发截图。', photoBad: '无法把这个文件当作照片打开。',
     seen: '照片内容：', heard: '你说的是：', voiceMsg: '🎤 语音消息',
+    check: { passed: '✓ 已由第二个 AI 对照 Kaplan 页面核查', fixed: '第二个 AI 发现并更正了错误：', contained: '无法核实 AI 的表述，以下是 Kaplan 原始步骤（英文）。',
+      caught: (where, wrong, kb) => `${where}写的是“${wrong}”；Kaplan 页面写的是：${kb}。`, step: (n) => `第 ${n} 步`, demo: '演示：故意注入错误' },
     mic: '按住用语音提问（最长 30 秒）', recording: '正在录音…松开即发送。',
     micDenied: '无法使用麦克风。请检查浏览器权限后再试。', micBad: '无法读取这段录音，请再试一次。',
     crisis: {
@@ -409,6 +416,22 @@ function feedback(ids, question) {
   return f;
 }
 
+// Surprise feature 4: what the second-AI check found. ?demo=fail makes the first AI slip in one mistake, and the tag says so.
+const demoFail = new URLSearchParams(location.search).get('demo') === 'fail';
+function checkLine(c, demo) {
+  const t = S().check, p = el('div', c.status === 'passed' ? 'check' : 'check caught', t[c.status] || '');
+  if (demo) p.prepend(el('span', 'sample', t.demo), ' ');
+  if (c.status === 'fixed') {
+    const ul = el('ul');
+    for (const x of c.caught) {
+      const n = /^steps\[(\d+)\]$/.exec(x.field);
+      ul.append(el('li', null, t.caught(n ? t.step(+n[1] + 1) : x.field, x.wrong, x.kb_says)));
+    }
+    p.append(ul);
+  }
+  return p;
+}
+
 // audio: a WAV data URL from the mic button. An attached photo goes with whatever is sent next.
 async function ask(text, audio) {
   text = text.trim();
@@ -423,12 +446,13 @@ async function ask(text, audio) {
   const bot = el('div'); bot.append(el('p', 'thinking', t.thinking)); chat.append(bot); scroll();
   input.value = ''; sendBtn.disabled = true; attach(null);
   try {
-    const data = await (await post('/api/chat', { message: text, image, audio, history, lang })).json();
+    const data = await (await post('/api/chat', { message: text, image, audio, history, lang, demoFail })).json();
     bot.textContent = '';
     if (data.crisis) return showCrisis(bot);
     if (data.error) { bot.append(errText(data.error)); return; }
     if (data.seen) bot.append(el('p', 'seen', (image ? t.seen : t.heard) + data.seen));
     bot.append(el('p', 'reply', data.reply || ''));
+    if (data.check) bot.append(checkLine(data.check, data.demo));
     data.cards.forEach((c) => bot.append(answer(c)));
     const question = text || data.seen;
     if (!data.cards.length) bot.append(el('p', 'none', t.notCovered), offerReview(question));
