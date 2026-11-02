@@ -150,7 +150,7 @@ const fmtDate = (d) => new Date(d + 'T00:00').toLocaleDateString('en-SG', { day:
 
 // Start screen is built from knowledge.json, so it always matches what the bot can answer.
 fetch('/knowledge.json').then((r) => r.json()).then((kb) => {
-  const groups = { 'Getting started': [], 'Classes and exams': [], 'Money and admin': [], 'Health and wellbeing': [] };
+  const groups = { 'Getting started': [], 'Classes and exams': [], 'Money and admin': [], 'Health and wellbeing': [], 'Contacts': [] };
   kb.forEach((e) => (groups[e.group] ||= []).push(e));
   const index = document.getElementById('index');
   for (const [name, entries] of Object.entries(groups)) {

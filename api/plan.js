@@ -42,17 +42,31 @@ export function cleanProfile(p = {}) {
   };
 }
 
-// The contact line for the student's programme, matched on its distinctive words ("Murdoch", "Dublin", "Diploma").
-const GENERIC = /^(university|college|kaplan|degrees?|business|full|time|part)$/;
-export function programmeContact(programme) {
-  const p = String(programme || '').toLowerCase();
+// The "Contacts" entry for the student's programme, matched on distinctive title/keyword words ("Murdoch", "UCD", "ACCA").
+const GENERIC = /^(university|college|kaplan|degrees?|business|full|time|part|student|services|contact|email|phone|programmes?|masters?|msc|the|and|of|in|for)$/;
+const words = (s) => s.toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 2 && !GENERIC.test(w));
+const TEAMS = KB.filter((e) => e.group === 'Contacts' && e.id !== CONTACTS.id)
+  .map((e) => ({ e, words: new Set(words([e.title, ...(e.keywords || [])].join(' '))) }));
+// Within the matched university, the step line for the student's own programme (e.g. Northumbria nursing vs business).
+// Plain words here: "part"/"full" are generic across universities but tell UCD's lines apart.
+const plain = (s) => s.toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 2);
+function bestLine({ e }, programme) {
+  const p = plain(programme);
   let best = null, score = 0;
-  for (const line of CONTACTS.steps) {
-    const words = line.split(':')[0].toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 3 && !GENERIC.test(w));
-    const n = words.filter((w) => p.includes(w)).length;
-    if (n > score) { best = line; score = n; }
+  for (const step of e.steps) {
+    const n = plain(step.split(':')[0]).filter((w) => p.includes(w)).length;
+    if (n > score) { best = step; score = n; }
   }
-  return best || CONTACTS.contact;
+  return e.steps.length > 1 && best ? `${e.title.replace(/ Student Services$/, '')}, ${best}` : e.contact;
+}
+export function programmeContact(programme) {
+  const p = words(String(programme || ''));
+  let best = null, score = 0;
+  for (const t of TEAMS) {
+    const n = p.filter((w) => t.words.has(w)).length;
+    if (n > score) { best = t; score = n; }
+  }
+  return best ? bestLine(best, String(programme)) : CONTACTS.contact;
 }
 
 // Unknown ids are dropped; contact, source and checked date come from knowledge.json; links the KB doesn't contain are removed.
