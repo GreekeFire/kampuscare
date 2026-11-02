@@ -2,7 +2,7 @@
 
 Read README.md and PITCH-NOTES.md first. Steps 0–4 are built and deployed. Step 5 is what's left.
 
-## Surprise features chosen
+## Surprise features presented: F1 Your User Changed + F3 No More Typing (all 5 built)
 
 | # | Feature (as announced) | What it means for KampusCare |
 |---|---|---|

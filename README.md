@@ -6,10 +6,10 @@
 >
 > **What it is:** a website where Kaplan students ask "how do I…" questions in English or 中文 (or any language they type in). It answers only from verified Kaplan info, shows the source and the date checked, and says so when it doesn't know.
 >
-> **Status (2 Nov 2026):** working and deployed. 32 entries: 20 topics from Kaplan's public website plus 12 Student Services contacts. **All 5 surprise features are built** (section 9). The rules score one from Round 1 (F1 or F2) and one from Round 2 (F3, F4 or F5), so pick two to present. 2 topics (timetable, leave) show "steps unverified" because Kaplan360 screens aren't public.
+> **Status (2 Nov 2026):** working and deployed. 32 entries: 20 topics from Kaplan's public website plus 12 Student Services contacts. **All 5 surprise features are built** (section 9). The rules score one from Round 1 (F1 or F2) and one from Round 2 (F3, F4 or F5), **The team presents F1 Your User Changed (Round 1) and F3 No More Typing (Round 2)**; the other three stay in the app as extras. 2 topics (timetable, leave) show "steps unverified" because Kaplan360 screens aren't public.
 >
 > **What the team needs to do:**
-> 1. **Pick the two surprise features** to present (section 9) and fill in the organisers' disclosure table.
+> 1. **Fill in the organisers' disclosure table** (presenting F1 Your User Changed + F3 No More Typing).
 > 2. **Read [PITCH-NOTES.md](PITCH-NOTES.md):** how we differ from Ask K360, and answers to likely judge questions.
 > 3. **Record a backup demo video** using the script in section 8.
 > 4. **Finish the checklist** in [HACKATHON-PLAN.md](HACKATHON-PLAN.md), Step 5.
@@ -156,7 +156,7 @@ Don't trash Ask K360. Frame it as: *"KampusCare shows how a student-support bot 
 4. **Human decides (2 min):** ask "How do I print on campus?" → not covered → **Send this question to Student Services** → open review.html → paste the Kaplan page text → **Draft with AI** → flags appear, Approve is greyed out → tick each flag → edit a step → **Approve** → back in chat, ask again → answer with the "Approved by Student Services" badge.
 5. **Safety (15s):** tap "Urgent help". Don't type a crisis phrase live.
 
-Round 2 options (use whichever the team picks, about 1 min each):
+Round 2: **No More Typing is the one we present.** The other two are extras if a judge asks (about 1 min each):
 - **No More Typing:** tap the camera, send a photo of a Kaplan notice or a Kaplan360 error (blur names and IDs) → "In your photo: …" then the steps. Or hold the mic and ask out loud → "You said: …".
 - **Make It Fail:** open **https://kampuscare.vercel.app/?demo=fail** → ask "I'm sick tomorrow, how do I apply for leave?" → "Demo: mistake injected · Caught and fixed by a second AI: step 5 said '7 working days'; the Kaplan page says 5" → the fixed answer. Say clearly that demo mode makes the first AI slip on purpose. It caught 8 of 9 in testing, so rehearse it.
 - **Make It Act:** on the leave answer, tap **Do it for me** → the AI chooses tools and shows each one: an email draft to the right Student Services team, a calendar reminder, a checklist. Point at "AI chose: …" on each card.
@@ -173,7 +173,7 @@ Before the pitch, click "Reset demo" at the bottom of /review.html. **Always hav
 | **Make It Fail** *(Round 2)*: show your AI getting it wrong, and an AI check catching it. | A second Gemini call checks every answer against the entries it used. Wrong or invented facts go back for one fix and a re-check; anything still wrong falls back to the original Kaplan steps. `?demo=fail` makes the first AI slip in one labelled mistake so the catch can be shown live. |
 | **Make It Act** *(Round 2)*: AI must choose and call tools to complete a task. | "Do it for me" on any answer: Gemini picks from `draft_email` (allow-listed Kaplan addresses only), `add_reminder` (.ics file), `make_checklist` and `send_to_student_services`, runs up to 4 rounds, and each action card shows which tool it chose. The student sends the email and adds the reminder themselves. |
 
-Rules: one feature from Round 1 and one from Round 2 count for scoring. All five are in the app; present the two the team picks and mention the rest as extras.
+Rules: one feature from Round 1 and one from Round 2 count for scoring. **We present Your User Changed (Round 1) and No More Typing (Round 2).** The other three are in the app as extras.
 
 ## 10. Not building (put on the "next steps" slide)
 
