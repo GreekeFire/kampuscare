@@ -86,8 +86,8 @@ export default async function handler(req, res) {
       return send(res, 200, { ok: true });
     }
 
-    if (!process.env.STAFF_PASSWORD) return send(res, 503, { error: 'Staff review is switched off: set STAFF_PASSWORD on the server.' });
-    if (!staffOk(body.password)) return send(res, 401, { error: 'Wrong staff password.' });
+    // ponytail: no STAFF_PASSWORD = open review page (hackathon demo); set it in Vercel to lock the page
+    if (process.env.STAFF_PASSWORD && !staffOk(body.password)) return send(res, 401, { error: 'Wrong staff password.' });
 
     const queue = await getQueue();
     if (body.action === 'list') return send(res, 200, { items: [...queue].sort((a, b) => b.created.localeCompare(a.created)) });

@@ -66,7 +66,7 @@
   <p class="err" id="err"></p>
   <div id="queue"></div>
 </main>
-<footer>Demo uses one shared staff password; production would use Kaplan staff SSO.</footer>
+<footer>Demo: open review page. Production would use Kaplan staff sign-in (SSO).</footer>
 
 <script>
 const $ = (id) => document.getElementById(id);
@@ -81,7 +81,7 @@ let password = sessionStorage.getItem('kc-staff') || '';
 async function api(action, extra = {}) {
   const r = await fetch('/api/review', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, password, ...extra }) });
   const data = await r.json().catch(() => ({ error: 'Unexpected server reply.' }));
-  if (r.status === 401) logout(data.error);
+  if (r.status === 401) logout(password ? data.error : '');
   if (data.error) throw new Error(data.error);
   return data;
 }
@@ -96,7 +96,7 @@ async function load() {
   try {
     const { items } = await api('list');
     sessionStorage.setItem('kc-staff', password);
-    $('login').hidden = true; $('logout').hidden = false;
+    $('login').hidden = true; $('logout').hidden = !password;
     render(items);
   } catch (e) { $('err').textContent = e.message; }
 }
@@ -186,7 +186,7 @@ function detail(item) {
 
 $('login').onsubmit = (e) => { e.preventDefault(); password = $('pw').value; load(); };
 $('logout').onclick = () => logout();
-if (password) load();
+load(); // opens straight away when the server has no STAFF_PASSWORD
 </script>
 </body>
 </html>
