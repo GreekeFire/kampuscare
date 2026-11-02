@@ -69,7 +69,8 @@
       "late",
       "attendance rate",
       "warning",
-      "student pass attendance"
+      "student pass attendance",
+      "self study"
     ],
     "summary": "Scan the class QR code twice: within 15 minutes of the start, and again after class ends. Student's Pass holders need 90% monthly attendance; everyone else needs 75%.",
     "steps": [
@@ -78,7 +79,7 @@
       "If the QR code won't scan, tell your lecturer so they can mark you manually.",
       "Check your real-time attendance rate in the Kaplan360 app."
     ],
-    "notes": "Online classes: attendance is based on logging in and taking part. Asynchronous lessons: based on accessing materials in the LMS. Student's Pass holders below 90% are reported to ICA; 7 consecutive days absent can lead to Student's Pass cancellation.",
+    "notes": "Online classes: attendance is based on logging in and taking part. Asynchronous lessons: based on accessing materials in the LMS. Student's Pass holders below 90% are reported to ICA; 7 consecutive days absent can lead to Student's Pass cancellation. Student's Pass holders are also required to self-study at school for at least 3 hours daily; if a class is shorter than 3 hours, you must top up the remaining time with self-study.",
     "contact": "Your lecturer (for scanning issues) or Student Services",
     "source": "https://www.kaplan.com.sg/life-on-campus-student-handbook-student-policies",
     "reviewed": "2026-11-01",
@@ -102,7 +103,7 @@
       "Open the Kaplan360 app and log in.",
       "Open your timetable / study plan.",
       "Tap a class to see its time and assigned classroom.",
-      "Check which campus the room is at (Wilkie Edge, Odeon 331 or Odeon 333)."
+      "Check which campus the room is at [Wilkie Edge (WE), Odeon 331 (OD) or Odeon 333 (NB)]."
     ],
     "notes": "Online classes and materials are on your LMS (see the LMS entry). Don't have Kaplan360 login details yet? See the Kaplan360 login entry.",
     "contact": "Student Services",
@@ -147,20 +148,21 @@
       "online materials",
       "course materials",
       "Moodle",
-      "portal"
+      "portal",
+      "Access the LMS steps unverified"
     ],
-    "summary": "Study guides, assignment submission, exam rules and final grades are on the eLearn Learning Management System (LMS). University partner programmes may also use the university's own portal.",
+    "summary": "Study guides, assignment submission, exam rules and final grades are on the eLearn Learning Management System (LMS).",
     "steps": [
-      "Go to the eLearn LMS login page.",
+      "Go to your LMS portal:\nMurdoch students (degree): (https://moodleprod.murdoch.edu.au/my/)\nKaplan students (diploma): (https://elearn.kaplan.com.sg/)",
       "Log in with your student account.",
       "Open your module to find the study guide and assignment submission page.",
       "Submit assignments before the deadline. The submission portal only opens within the stated dates."
     ],
     "notes": "Uploading the correct file is your responsibility. Murdoch students' enrolled units also appear in the Murdoch University student portal.",
     "contact": "Student Services",
-    "source": "https://www.kaplan.com.sg/life-on-campus-student-handbook-student-policies",
+    "source": "https://elearn.kaplan.com.sg/",
     "reviewed": "2026-11-01",
-    "sample": true
+    "sample": false
   },
   {
     "id": "results",
