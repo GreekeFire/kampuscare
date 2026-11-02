@@ -121,28 +121,33 @@
   #plan-open { margin-bottom:12px; }
   .wb-link { display:block; background:none; border:0; padding:0; margin:-8px 0 14px 21px; font:inherit; font-size:14px; color:var(--accent); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
   .breath { display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center; }
-  .breath[hidden] { display:none; }
-  .seg { display:inline-flex; flex-wrap:wrap; justify-content:center; gap:2px; padding:3px; border:1px solid var(--rule); border-radius:8px; }
-  .seg button { font:inherit; font-size:14px; background:none; border:0; border-radius:6px; padding:6px 12px; color:var(--muted); cursor:pointer; }
-  .seg [aria-pressed=true] { background:var(--accent-bg); color:var(--accent); font-weight:600; }
-  /* The circle fills like water on breathe-in and drains on breathe-out; --d is the current phase length. */
-  .breath-box { position:relative; width:180px; height:180px; margin:12px 0; --d:1s; }
-  .breath-circle { position:relative; height:100%; border-radius:50%; overflow:hidden; background:#fff; border:2px solid var(--accent); display:grid; place-items:center; }
-  .water { position:absolute; inset:0; background:var(--accent); opacity:.18; transform:translateY(100%); transition:transform var(--d) ease-in-out; }
-  .glow { position:absolute; inset:0; border-radius:50%; box-shadow:0 0 28px 6px var(--accent); opacity:.1; transform:scale(.94); transition:transform var(--d) ease-in-out, opacity var(--d) ease-in-out; }
-  .full .water { transform:translateY(0); }
-  .full .glow { transform:scale(1.12); opacity:.3; }
-  .breath-label { position:relative; display:grid; justify-items:center; font-weight:600; }
+  /* Waves inside a circle: the water level (.level) rises on breathe-in and drains on breathe-out; --d is the current phase length. */
+  .breath-box { position:relative; width:220px; height:220px; margin:16px 0; --d:1s; }
+  .glow { position:absolute; inset:-12px; border-radius:50%; background:radial-gradient(circle, #7cc6d9 0%, #4fa3c7 50%, transparent 72%); filter:blur(18px); opacity:.25; transform:scale(.9); transition:transform var(--d) ease-in-out, opacity var(--d) ease-in-out; }
+  .full .glow { opacity:.6; transform:scale(1.12); }
+  .breath-circle { position:relative; height:100%; display:grid; place-items:center; }
+  .breath-circle svg { position:absolute; inset:0; width:100%; height:100%; }
+  .level { transform:translateY(150px); transition:transform var(--d) ease-in-out; }
+  .full .level { transform:translateY(40px); }
+  .wave { animation:wave 8s linear infinite; }
+  .w2 { animation-duration:5.5s; animation-direction:reverse; }
+  .w3 { animation-duration:3.8s; }
+  @keyframes wave { to { transform:translateX(-200px); } }
+  .bubble { fill:#fff; opacity:0; }
+  .in .bubble { animation:rise 2.2s ease-in infinite; }
+  @keyframes rise { 20% { opacity:.85; } to { opacity:0; transform:translateY(-70px); } }
+  .ring { fill:none; stroke:#4fa3c7; stroke-width:1.5; }
+  .pulse { animation:swell .6s ease-out; }
+  @keyframes swell { 50% { transform:scale(1.04); } }
+  .breath-label { position:relative; display:grid; justify-items:center; min-width:100px; padding:6px 14px; border-radius:14px; font-weight:600; color:var(--ink); transition:background .4s; }
+  .run .breath-label { background:rgba(255,255,255,.8); box-shadow:0 1px 8px rgba(47,127,176,.2); }
   .breath-count { font-size:40px; line-height:1.1; font-variant-numeric:tabular-nums; }
+  .fade { animation:fade .5s ease-out; }
+  @keyframes fade { from { opacity:0; transform:translateY(6px); } }
   .dots { display:flex; gap:8px; }
   .dots span { width:10px; height:10px; border-radius:50%; border:1.5px solid var(--accent); }
   .dots .on { background:var(--accent); }
   .breath-tip { margin:0; min-height:1.55em; color:var(--muted); }
-  .g-num { font-size:72px; font-weight:700; line-height:1; color:var(--accent); font-variant-numeric:tabular-nums; }
-  .g-text { margin:0; font-size:18px; font-weight:600; }
-  .g-ticks { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; }
-  .g-tick { width:44px; height:44px; padding:0; border-radius:50%; border:2px solid var(--accent); background:#fff; color:transparent; display:grid; place-items:center; cursor:pointer; }
-  .g-tick[aria-pressed=true] { background:var(--accent); color:#fff; }
   .wb-row { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; }
   .checkin { text-align:center; }
   .checkin h3 { margin:20px 0 10px; font-size:16px; }
@@ -171,7 +176,7 @@
   .tap::after { content:""; position:absolute; inset:-5px; border:2px solid var(--accent); border-radius:999px; animation:pulse 1.6s ease-out infinite; }
   @keyframes pulse { from { transform:scale(.9); opacity:1; } to { transform:scale(1.3); opacity:0; } }
   @media (prefers-reduced-motion: reduce) {
-    .water, .glow { display:none; } /* text, countdown and dots only */
+    .wave, .in .bubble, .pulse, .fade { animation:none; } /* the water level still rises and drains */
     .tap::after { animation:none; }
   }
   .demo-banner { margin:0 0 12px; padding:8px 10px; border-radius:4px; background:var(--warn-bg); color:var(--warn); font-size:14px; }
@@ -285,16 +290,12 @@ const STRINGS = {
       title: 'Wellbeing',
       stance: "For when things feel like a lot. Start with a minute of slow breathing, then book a free, confidential counsellor, or talk to a senior student. If you're in danger right now, use Urgent help at the top.",
       breathe: 'Calming breath', in: 'Breathe in…', hold: 'Hold…', out: 'Breathe out…', start: 'Start', stop: 'Stop',
-      exercise: 'Exercise', tabs: { breath: 'Breathing', ground: '5-4-3-2-1 grounding' },
-      pattern: 'Breathing pattern', patterns: { quick: 'Quick calm', box: 'Box', relax: 'Relax (4-7-8)' },
       sound: (on) => `Sound: ${on ? 'on' : 'off'}`, rounds: (n) => `${n} of 5 rounds done`,
       tips: ['Let your shoulders drop.', 'Notice your feet on the floor.', 'Unclench your jaw.', 'Breathe out a little longer than in.', "You're doing fine."],
-      ground: ['Name 5 things you can see.', '4 things you can touch.', '3 things you can hear.', '2 things you can smell.', '1 thing you can taste, or one kind thing to tell yourself.'],
-      tick: (i, n) => `${i} of ${n}`, back: 'Back', skip: 'Skip',
       feel: 'How do you feel now?', feelings: { better: 'Better', same: 'About the same', worse: 'Worse' },
-      feelReply: { better: 'Nice. You can come back to this any time.', same: "That's okay. Try the other exercise, or talk to someone.",
+      feelReply: { better: 'Nice. You can come back to this any time.', same: "That's okay. Try again, or talk to someone.",
         worse: "Thanks for telling us. A counsellor can help, and it's free and confidential." },
-      other: 'Try the other exercise', unsafe: ['If you feel unsafe right now, use ', '.'],
+      again: 'Try again', unsafe: ['If you feel unsafe right now, use ', '.'],
       book: 'Book a counsellor',
       shots: ['Log in to the Kaplan360 app.', 'Tap the "Academic" icon in the bottom bar.', 'Open the "Counselling" tab.', 'Tap "+ New", then fill in and submit the form.'],
       illustration: "Illustration, not a real screenshot. Menu names from Kaplan's student handbook.",
@@ -387,16 +388,12 @@ const STRINGS = {
       title: '身心关怀',
       stance: '当一切让你觉得喘不过气时，先花一分钟慢慢呼吸，再预约免费、保密的心理辅导，或者找学长学姐聊聊。如果你现在有危险，请点上方的“紧急求助”。',
       breathe: '平静呼吸', in: '吸气…', hold: '屏住…', out: '呼气…', start: '开始', stop: '停止',
-      exercise: '练习', tabs: { breath: '呼吸', ground: '5-4-3-2-1 着陆练习' },
-      pattern: '呼吸节奏', patterns: { quick: '快速平静', box: '方块呼吸', relax: '放松 (4-7-8)' },
       sound: (on) => `声音：${on ? '开' : '关'}`, rounds: (n) => `已完成 ${n} / 5 轮`,
       tips: ['让肩膀放松下来。', '感受双脚踩在地面上。', '松开咬紧的牙关。', '呼气比吸气稍长一点。', '你做得很好。'],
-      ground: ['说出 5 样你能看到的东西。', '4 样你能摸到的东西。', '3 种你能听到的声音。', '2 种你能闻到的气味。', '1 种你能尝到的味道，或者对自己说一句温柔的话。'],
-      tick: (i, n) => `第 ${i} 个，共 ${n} 个`, back: '上一步', skip: '跳过',
       feel: '你现在感觉怎么样？', feelings: { better: '好一些', same: '差不多', worse: '更糟' },
-      feelReply: { better: '很好。你随时可以回来做这个练习。', same: '没关系。试试另一个练习，或者找人聊聊。',
+      feelReply: { better: '很好。你随时可以回来做这个练习。', same: '没关系。可以再试一次，或者找人聊聊。',
         worse: '谢谢你告诉我们。心理辅导员可以帮你，免费而且保密。' },
-      other: '试试另一个练习', unsafe: ['如果你现在觉得不安全，请点', '。'],
+      again: '再试一次', unsafe: ['如果你现在觉得不安全，请点', '。'],
       book: '预约心理辅导',
       shots: ['登录 Kaplan360 App。', '点击底部栏的 "Academic" 图标。', '打开 "Counselling" 标签。', '点击 "+ New"，填写并提交表格。'],
       illustration: '示意图，不是真实截图。菜单名称来自 Kaplan 学生手册。',
@@ -876,41 +873,46 @@ function matchSeniors(list, field, country, buddy) {
 }
 // Plan profile "home" is free text ("Vietnam, Vietnamese"): first 4 letters catch the country and most demonyms.
 const homeCountry = (home, names) => Object.keys(names).find((k) => k !== 'other' && String(home || '').toLowerCase().includes(names[k].slice(0, 4).toLowerCase())) || 'other';
-// One round of each breathing pattern as [phase, seconds]; 'hold' keeps the circle where it is.
-const PATTERNS = {
-  quick: [['in', 4], ['out', 6]],
-  box: [['in', 4], ['hold', 4], ['out', 4], ['hold', 4]],
-  relax: [['in', 4], ['hold', 7], ['out', 8]],
-};
-const ROUNDS = 5, GROUNDING = [5, 4, 3, 2, 1];
+// One round as [phase, seconds]: in 4, hold 2, out 6. 'hold' keeps the water where it is.
+const PATTERN = [['in', 4], ['hold', 2], ['out', 6]], ROUNDS = 5;
 // wellbeing:pure-end
 
 const btn = (cls, text, onclick) => { const b = el('button', cls, text); b.type = 'button'; b.onclick = onclick; return b; };
 const row = (...kids) => { const d = el('div', 'wb-row'); d.append(...kids); return d; };
-// Segmented choice: one button per option, the picked one has aria-pressed=true.
-function seg(opts, cur, label, onPick) {
-  const g = el('div', 'seg'), bs = [];
-  g.setAttribute('role', 'group'); g.setAttribute('aria-label', label);
-  const pick = (k) => bs.forEach((b) => b.setAttribute('aria-pressed', b.dataset.k === k));
-  for (const [k, text] of Object.entries(opts)) { const b = btn(null, text, () => { pick(k); onPick(k); }); b.dataset.k = k; bs.push(b); }
-  g.append(...bs); pick(cur); return g;
-}
 const svg = (d, size) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
-const TICK = svg('<path d="M5 12l5 5 9-10"/>', 22);
 const FACES = { better: 'M8 14c2 2.5 6 2.5 8 0', same: 'M8.5 15h7', worse: 'M8 16.5c2-2.5 6-2.5 8 0' };
 
-// Calming breath: two exercises, then a "how do you feel" check-in. Nothing is stored or sent.
+// Calming breath, then a "how do you feel" check-in. Nothing is stored or sent.
 function calm(sec) {
-  const t = S().wb, after = el('div', 'checkin'), panels = { breath: el('div', 'breath'), ground: el('div', 'breath') };
-  const clear = () => after.replaceChildren();
-  const show = (k) => { stopBreath(); resetGround(); for (const [p, d] of Object.entries(panels)) d.hidden = p !== k; };
-  const tabs = seg(t.tabs, 'breath', t.exercise, show);
-  const other = () => tabs.querySelector('[aria-pressed=false]').click();
-  const finish = () => checkIn(after, other);
-  const stopBreath = breathing(panels.breath, finish, clear), resetGround = grounding(panels.ground, finish, clear);
-  panels.ground.hidden = true;
-  sec.append(row(tabs), panels.breath, panels.ground, after);
+  const box = el('div', 'breath'), after = el('div', 'checkin');
+  const again = breathing(box, () => checkIn(after, again), () => after.replaceChildren());
+  sec.append(box, after);
 }
+
+// Three wave layers, each 400 wide with a 100 period, so scrolling them 200 left loops seamlessly.
+const wave = (y, a) => `M0 ${y} q25 ${-a} 50 0${' t50 0'.repeat(7)} V240 H0Z`;
+const WATER = `<svg viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+  <defs>
+    <clipPath id="wb-clip"><circle cx="100" cy="100" r="99"/></clipPath>
+    <linearGradient id="wb-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4fafc"/><stop offset="1" stop-color="#dcf0f6"/></linearGradient>
+    ${[['#7cc6d9', '#4fa3c7'], ['#4fa3c7', '#2f7fb0'], ['#2f7fb0', '#1f5f8a']].map(([a, b], i) =>
+      `<linearGradient id="wb-w${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`).join('')}
+  </defs>
+  <g clip-path="url(#wb-clip)">
+    <rect width="200" height="200" fill="url(#wb-sky)"/>
+    <g class="level">
+      <path class="wave w1" d="${wave(-8, 6)}" fill="url(#wb-w0)" opacity=".5"/>
+      <path class="wave w2" d="${wave(-2, 8)}" fill="url(#wb-w1)" opacity=".55"/>
+      <path class="wave w3" d="${wave(4, 5)}" fill="url(#wb-w2)" opacity=".7"/>
+    </g>
+    ${[[60, 0, 3], [92, .8, 2], [128, .4, 3.5], [150, 1.4, 2.5], [76, 1.8, 2]].map(([x, s, r]) =>
+      `<circle class="bubble" cx="${x}" cy="188" r="${r}" style="animation-delay:${s}s"/>`).join('')}
+  </g>
+  <circle class="ring" cx="100" cy="100" r="99"/>
+</svg>`;
+
+// Restart a one-shot CSS animation class.
+const replay = (node, cls) => { node.classList.remove(cls); void node.offsetWidth; node.classList.add(cls); };
 
 function breathing(box, finish, clear) {
   const t = S().wb, stage = el('div', 'breath-box'), circle = el('div', 'breath-circle'), label = el('div', 'breath-label');
@@ -918,7 +920,7 @@ function breathing(box, finish, clear) {
   phase.setAttribute('aria-live', 'polite'); count.setAttribute('aria-hidden', 'true'); // announce phase changes, not every second
   dots.setAttribute('role', 'img');
   const dot = [...Array(ROUNDS)].map(() => el('span'));
-  let pattern = 'quick', timer = null, sound = false, audio = null, cur = null;
+  let timer = null, sound = false, audio = null, cur = null;
 
   // Quiet 220 Hz sine whose volume follows the breath. Created on a click only, closed on stop/end.
   const VOL = 0.06;
@@ -939,7 +941,6 @@ function breathing(box, finish, clear) {
     g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(ph === 'in' ? VOL : 0.0001, now + n);
   };
 
-  const patterns = seg(t.patterns, pattern, t.pattern, (k) => { pattern = k; if (timer) end(); });
   const soundBtn = btn('ghost', t.sound(false), () => {
     sound = !sound; soundBtn.textContent = t.sound(sound); soundBtn.setAttribute('aria-pressed', sound);
     if (!timer) return;
@@ -951,68 +952,43 @@ function breathing(box, finish, clear) {
   const setDots = (n) => { dot.forEach((d, i) => d.classList.toggle('on', i < n)); dots.setAttribute('aria-label', t.rounds(n)); };
   const end = () => {
     clearInterval(timer); timer = null; soundOff();
-    stage.style.setProperty('--d', '1s'); stage.classList.remove('full');
+    stage.style.setProperty('--d', '1s'); stage.classList.remove('full', 'in', 'run');
     phase.textContent = count.textContent = tip.textContent = '';
     start.hidden = false; stop.hidden = true;
   };
   start.onclick = () => {
-    const P = PATTERNS[pattern];
-    let round = 0, i = 0, left = P[0][1];
+    let round = 0, i = 0, left = PATTERN[0][1];
     const show = () => {
-      const [ph, n] = (cur = P[i][0], P[i]);
+      const [ph, n] = (cur = PATTERN[i][0], PATTERN[i]);
       stage.style.setProperty('--d', n + 's'); // set the duration before the level changes
       if (ph !== 'hold') stage.classList.toggle('full', ph === 'in');
+      stage.classList.toggle('in', ph === 'in'); // bubbles only while breathing in
       phase.textContent = t[ph]; count.textContent = left; ramp(ph, n);
+      replay(circle, 'pulse'); replay(phase, 'fade');
     };
     clear(); setDots(0); tip.textContent = t.tips[0];
     if (sound) soundOn();
-    show(); start.hidden = true; stop.hidden = false; stop.focus();
+    stage.classList.add('run'); show(); start.hidden = true; stop.hidden = false; stop.focus();
     timer = setInterval(() => {
       if (!box.isConnected) return end(); // page was rebuilt
       if (--left > 0) return (count.textContent = left);
-      i = (i + 1) % P.length;
+      i = (i + 1) % PATTERN.length;
       if (i === 0) {
         setDots(++round);
         if (round === ROUNDS) { end(); return finish(); }
         tip.textContent = t.tips[round];
       }
-      left = P[i][1]; show();
+      left = PATTERN[i][1]; show();
     }, 1000);
   };
 
-  circle.append(el('div', 'water'), label); label.append(phase, count);
+  circle.innerHTML = WATER; circle.append(label); label.append(phase, count);
   stage.append(el('div', 'glow'), circle); dots.append(...dot); setDots(0); stop.hidden = true;
-  box.append(patterns, stage, dots, tip, row(start, stop, soundBtn));
-  return end;
+  box.append(stage, dots, tip, row(start, stop, soundBtn));
+  return () => start.onclick();
 }
 
-function grounding(box, finish, clear) {
-  const t = S().wb, num = el('div', 'g-num'), text = el('p', 'g-text'), ticks = el('div', 'g-ticks');
-  num.setAttribute('aria-hidden', 'true'); text.setAttribute('aria-live', 'polite');
-  let step = 0, wait;
-  const back = btn('ghost', t.back, () => go(step - 1)), skip = btn('ghost', t.skip, () => go(step + 1));
-  const go = (s) => {
-    clearTimeout(wait);
-    if (s >= GROUNDING.length) return finish();
-    step = Math.max(0, s); clear();
-    const n = GROUNDING[step];
-    num.textContent = n; text.textContent = t.ground[step]; back.disabled = step === 0;
-    ticks.replaceChildren(...[...Array(n)].map((_, j) => {
-      const b = btn('g-tick', null, () => {
-        b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true');
-        clearTimeout(wait);
-        if (!ticks.querySelector('[aria-pressed=false]')) wait = setTimeout(() => go(step + 1), 600);
-      });
-      b.innerHTML = TICK; b.setAttribute('aria-pressed', false); b.setAttribute('aria-label', t.tick(j + 1, n));
-      return b;
-    }));
-  };
-  box.append(num, text, ticks, row(back, skip));
-  go(0);
-  return () => go(0);
-}
-
-function checkIn(into, other) {
+function checkIn(into, again) {
   const t = S().wb, q = el('h3', null, t.feel), faces = el('div', 'wb-row'), out = el('div');
   q.tabIndex = -1;
   const book = () => document.getElementById('wb-book');
@@ -1021,7 +997,7 @@ function checkIn(into, other) {
       faces.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', x === b));
       book().classList.remove('wb-highlight');
       out.replaceChildren(el('p', 'reply', t.feelReply[k]));
-      if (k === 'same') out.append(row(btn('ghost', t.other, other), btn('ghost', t.book, () => book().scrollIntoView({ behavior: 'smooth' }))));
+      if (k === 'same') out.append(row(btn('ghost', t.again, again), btn('ghost', t.book, () => book().scrollIntoView({ behavior: 'smooth' }))));
       if (k === 'worse') {
         const line = el('p', 'notes'), crisis = el('div');
         line.append(t.unsafe[0], btn('urgent', S().urgent, () => { crisis.replaceChildren(); showCrisis(crisis); crisis.scrollIntoView({ block: 'center' }); }), t.unsafe[1]);
