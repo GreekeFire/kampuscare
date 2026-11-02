@@ -117,6 +117,48 @@
   .act .mail { white-space:pre-wrap; font-size:14px; margin:0 0 8px; padding:8px 10px; background:var(--paper); border:1px solid var(--rule); border-radius:4px; }
   .act .items > li { display:block; }
   .act .items input { margin-right:8px; accent-color:var(--accent); }
+  /* Wellbeing: breathe → book a counsellor → talk to a senior */
+  #plan-open { margin-bottom:12px; }
+  .wb-link { display:block; background:none; border:0; padding:0; margin:-8px 0 14px 21px; font:inherit; font-size:14px; color:var(--accent); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+  .breath { display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .breath-box { width:160px; height:160px; display:grid; place-items:center; }
+  .breath-circle { width:160px; height:160px; border-radius:50%; background:var(--accent-bg); border:2px solid var(--accent); transform:scale(.6); transition:transform 1s ease-in-out; }
+  .breath-circle.in { transform:scale(1); transition-duration:4s; }
+  .breath-circle.hold { transform:scale(1); }
+  .breath-circle.out { transform:scale(.6); transition-duration:6s; }
+  .breath-label { margin:0; min-height:1.55em; font-size:18px; font-weight:600; text-align:center; font-variant-numeric:tabular-nums; }
+  .phones { display:flex; gap:16px; overflow-x:auto; scroll-snap-type:x mandatory; padding:8px 2px 12px; counter-reset:f; }
+  .phones figure { flex:none; width:156px; margin:0; scroll-snap-align:start; counter-increment:f; }
+  .phones figcaption { position:relative; padding:8px 0 0 32px; font-size:14px; }
+  .phones figcaption::before { content:counter(f); position:absolute; left:0; top:8px; width:24px; height:24px; border-radius:50%; background:var(--accent); color:#fff; font-size:13px; font-weight:600; display:grid; place-items:center; }
+  .phone { height:280px; border:2px solid var(--ink); border-radius:22px; background:#fff; overflow:hidden; display:flex; flex-direction:column; font-size:11px; }
+  .phone .top { padding:14px 10px 6px; font-weight:600; border-bottom:1px solid var(--rule); }
+  .phone .body { flex:1; position:relative; padding:12px 10px; display:flex; flex-direction:column; gap:8px; }
+  .phone .line { height:8px; border-radius:4px; background:var(--rule); }
+  .phone .field { height:22px; border:1px solid var(--rule); border-radius:4px; }
+  .phone .btn { align-self:stretch; height:22px; border-radius:6px; background:var(--accent); color:#fff; font-weight:600; display:grid; place-items:center; }
+  .phone .new { position:absolute; right:10px; bottom:10px; align-self:auto; padding:0 10px; }
+  .phone .tabs { display:flex; gap:4px; }
+  .phone .tabs span { min-width:22px; height:18px; border-radius:9px; background:var(--rule); }
+  .phone .tabs .target { padding:1px 7px; background:var(--accent-bg); }
+  .phone .nav { display:flex; justify-content:space-around; align-items:center; padding:6px 4px 10px; border-top:1px solid var(--rule); color:var(--muted); }
+  .phone .nav span { display:grid; justify-items:center; font-size:9px; }
+  .phone .target { color:var(--accent); font-weight:700; }
+  .tap { position:relative; }
+  .tap::after { content:""; position:absolute; inset:-5px; border:2px solid var(--accent); border-radius:999px; animation:pulse 1.6s ease-out infinite; }
+  @keyframes pulse { from { transform:scale(.9); opacity:1; } to { transform:scale(1.3); opacity:0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .breath-circle { transform:none !important; transition:none; }
+    .tap::after { animation:none; }
+  }
+  .demo-banner { margin:0 0 12px; padding:8px 10px; border-radius:4px; background:var(--warn-bg); color:var(--warn); font-size:14px; }
+  .profile textarea { display:block; width:100%; margin-top:4px; font-size:16px; }
+  .profile .primary { margin-top:12px; }
+  .senior { display:flex; gap:12px; padding:14px 0; border-bottom:1px solid var(--rule); }
+  .senior h3 { margin:0; font-size:15px; }
+  .senior p { margin:2px 0; }
+  .senior .ghost { margin-top:6px; }
+  .avatar { flex:none; width:40px; height:40px; border-radius:50%; background:var(--accent-bg); color:var(--accent); font-weight:600; display:grid; place-items:center; }
 </style>
 </head>
 <body>
@@ -137,6 +179,7 @@
     <h1 id="headline"></h1>
     <p class="stance" id="stance"></p>
     <button class="plan-open" type="button" id="plan-open"></button>
+    <button class="plan-open" type="button" id="wb-open"></button>
     <div class="index" id="index"></div>
     <p class="provenance" id="provenance"></p>
   </section>
@@ -212,6 +255,35 @@ const STRINGS = {
       noPlan: "We couldn't build a plan from KampusCare's Kaplan pages. Kaplan general enquiries: +65 6733 1877.",
       done: 'Done', team: 'Your Student Services team', missing: 'Not covered by KampusCare yet',
       askAbout: 'Ask your Student Services team or programme consultant about:', print: 'Print / save as PDF',
+      buddy: 'New to Singapore? ', buddyCta: 'Find a student buddy from home →',
+    },
+    wb: {
+      open: 'Feeling stressed? ', openCta: 'Breathe, book a counsellor or talk to a senior →', link: 'Open Wellbeing →',
+      title: 'Wellbeing',
+      stance: "For when things feel like a lot. Start with a minute of slow breathing, then book a free, confidential counsellor, or talk to a senior student. If you're in danger right now, use Urgent help at the top.",
+      breathe: 'Calming breath', in: 'Breathe in…', hold: 'Hold…', out: 'Breathe out…', start: 'Start', stop: 'Stop',
+      done: 'Feeling a bit better? If not, a counsellor can help.',
+      book: 'Book a counsellor',
+      shots: ['Log in to the Kaplan360 app.', 'Tap the "Academic" icon in the bottom bar.', 'Open the "Counselling" tab.', 'Tap "+ New", then fill in and submit the form.'],
+      illustration: "Illustration, not a real screenshot. Menu names from Kaplan's student handbook.",
+      reply: 'The counselling team will contact you within 3 working days. It is not for emergencies: for that, use Urgent help.',
+      booked: "I've booked it", wellDone: 'Well done. The counselling team will contact you within 3 working days.',
+      senior: 'Talk to a senior',
+      seniorIntro: 'Stressed about your course? A senior student from the same field, and ideally the same home country, has been there.',
+      banner: 'Demo: sample profiles, not real students. In the real version, seniors are trained Kaplan peer mentors who opted in.',
+      notPro: "Seniors are students, not counsellors or professionals. They share what worked for them; they can't give medical or mental-health advice. For anything serious, book a counsellor above. In an emergency, use Urgent help.",
+      mode: 'I want help with', modes: { course: 'Stress about my course (same field)', buddy: "I'm new to Singapore: find me a buddy (same country)" },
+      noBuddy: 'No sample buddy from that country yet. Your Student Services team can help you settle in.',
+      field: 'Your field', country: 'Home country / language', mind: "What's on your mind? (optional)", find: 'Find a senior',
+      fields: { business: 'Business', it: 'IT / Computing', nursing: 'Nursing / Health', psych: 'Psychology / Counselling', early: 'Early Childhood / Education',
+        masscomm: 'Mass Communication', finance: 'Finance / Accounting', law: 'Law', engineering: 'Engineering / Supply chain' },
+      countries: { sg: 'Singapore', cn: 'China', vn: 'Vietnam', id: 'Indonesia', my: 'Malaysia', in: 'India', mm: 'Myanmar', ph: 'Philippines', other: 'Other' },
+      whyLabel: 'Why this match: ',
+      why: (s, same, c) => same ? `Also a ${s.programme} student from ${c}, Year ${s.year}` : `Also a ${s.programme} student, Year ${s.year}, from ${c}`,
+      speaks: 'Speaks', avail: { day: 'Usually replies within a day', evening: 'Usually replies in the evening', week: 'Usually replies within 2 to 3 days' },
+      noMatch: 'No sample senior in that field yet. A counsellor or your Student Services team can still help.',
+      request: 'Request a chat',
+      confirm: (name) => `Demo: in the real version, ${name} gets your request in Kaplan360 and replies there. Peer mentors aren't counsellors; for serious worries, book a counsellor above.`,
     },
   },
   zh: {
@@ -276,6 +348,36 @@ const STRINGS = {
       noPlan: '无法根据 KampusCare 的 Kaplan 页面生成计划。Kaplan 综合咨询：+65 6733 1877。',
       done: '已完成', team: '你的学生服务团队', missing: 'KampusCare 暂未涵盖',
       askAbout: '以下事项请咨询你的学生服务团队或课程顾问：', print: '打印 / 保存为 PDF',
+      buddy: '刚来新加坡？', buddyCta: '找一位来自家乡的学生伙伴 →',
+    },
+    wb: {
+      open: '压力很大？', openCta: '深呼吸、预约心理辅导，或找学长学姐聊聊 →', link: '打开身心关怀 →',
+      title: '身心关怀',
+      stance: '当一切让你觉得喘不过气时，先花一分钟慢慢呼吸，再预约免费、保密的心理辅导，或者找学长学姐聊聊。如果你现在有危险，请点上方的“紧急求助”。',
+      breathe: '平静呼吸', in: '吸气…', hold: '屏住…', out: '呼气…', start: '开始', stop: '停止',
+      done: '感觉好一点了吗？如果没有，心理辅导员可以帮你。',
+      book: '预约心理辅导',
+      shots: ['登录 Kaplan360 App。', '点击底部栏的 "Academic" 图标。', '打开 "Counselling" 标签。', '点击 "+ New"，填写并提交表格。'],
+      illustration: '示意图，不是真实截图。菜单名称来自 Kaplan 学生手册。',
+      reply: '心理辅导团队会在 3 个工作日内联系你。这不适用于紧急情况：紧急时请用“紧急求助”。',
+      notes: '心理辅导员不做诊断，也不开药。内容保密，但涉及生命或安全的紧迫威胁时除外。',
+      booked: '我已经预约了', wellDone: '做得好。心理辅导团队会在 3 个工作日内联系你。',
+      senior: '找学长学姐聊聊',
+      seniorIntro: '课程压力大？同专业、最好来自同一个国家的学长学姐也经历过。',
+      banner: '演示：这些是示例资料，不是真实学生。正式版本中，学长学姐是自愿参加并受过培训的 Kaplan 朋辈导师。',
+      notPro: '学长学姐是学生，不是心理辅导员或专业人士。他们分享自己的经验，不能提供医疗或心理健康建议。如果困扰很严重，请在上方预约心理辅导；紧急情况请用“紧急求助”。',
+      mode: '我需要的帮助', modes: { course: '课程压力（同专业）', buddy: '我刚来新加坡：帮我找个伙伴（同国家）' },
+      noBuddy: '暂时还没有来自这个国家的示例伙伴。你的学生服务团队可以帮你适应新生活。',
+      field: '你的专业', country: '国家 / 语言', mind: '你在担心什么？（可选）', find: '找学长学姐',
+      fields: { business: '商科', it: 'IT / 计算机', nursing: '护理 / 健康', psych: '心理学 / 辅导', early: '幼儿教育 / 教育',
+        masscomm: '大众传播', finance: '金融 / 会计', law: '法律', engineering: '工程 / 供应链' },
+      countries: { sg: '新加坡', cn: '中国', vn: '越南', id: '印度尼西亚', my: '马来西亚', in: '印度', mm: '缅甸', ph: '菲律宾', other: '其他' },
+      whyLabel: '匹配原因：',
+      why: (s, same, c) => same ? `同样是 ${s.programme} 的学生，来自${c}，${s.year} 年级` : `同样是 ${s.programme} 的学生，${s.year} 年级，来自${c}`,
+      speaks: '语言', avail: { day: '通常一天内回复', evening: '通常晚上回复', week: '通常 2 到 3 天内回复' },
+      noMatch: '这个专业暂时还没有示例学长学姐。心理辅导员或你的学生服务团队仍然可以帮你。',
+      request: '请求聊天',
+      confirm: (name) => `演示：正式版本中，${name} 会在 Kaplan360 收到你的请求并在那里回复。朋辈导师不是心理辅导员；如果困扰很严重，请在上方预约心理辅导。`,
     },
   },
 };
@@ -358,6 +460,7 @@ function applyLang() {
     document.getElementById('headline').textContent = t.headline;
     document.getElementById('stance').textContent = t.stance;
     document.getElementById('plan-open').replaceChildren(t.planOpen, el('strong', null, t.planOpenCta));
+    document.getElementById('wb-open').replaceChildren(t.wb.open, el('strong', null, t.wb.openCta));
     renderIndex();
   }
 }
@@ -369,7 +472,7 @@ langSel.onchange = () => {
 };
 applyLang();
 
-fetch('/knowledge.json').then((r) => r.json()).then((data) => { kb = data; renderIndex(); }).catch(() => {});
+const kbReady = fetch('/knowledge.json').then((r) => r.json()).then((data) => { kb = data; renderIndex(); }).catch(() => {});
 
 // Steps come from the model: build nodes, never innerHTML. "\n" = line break, https URLs = links.
 function stepItem(text) {
@@ -517,7 +620,11 @@ async function ask(text, audio) {
     bot.append(el('p', 'reply', data.reply || ''));
     if (data.check) bot.append(checkLine(data.check, data.demo));
     const question = text || data.seen;
-    data.cards.forEach((c) => bot.append(answer(c), doIt(question, c.id)));
+    data.cards.forEach((c) => {
+      bot.append(answer(c));
+      if (c.id === 'counselling') { const l = el('button', 'wb-link', t.wb.link); l.type = 'button'; l.onclick = openWellbeing; bot.append(l); }
+      bot.append(doIt(question, c.id));
+    });
     if (!data.cards.length) bot.append(el('p', 'none', t.notCovered), offerReview(question), doIt(question));
     bot.append(feedback(data.cards.map((c) => c.id), question));
     // The photo itself never goes into history, only a "[photo]" marker.
@@ -614,6 +721,11 @@ function renderPlan(out, data, regenerate) {
     out.append(el('h2', null, t.missing), el('p', 'notes', t.askAbout), ul);
   }
 
+  const buddy = el('button', 'plan-open'); buddy.type = 'button';
+  buddy.append(t.buddy, el('strong', null, t.buddyCta));
+  buddy.onclick = () => openWellbeing({ buddy: true, country: homeCountry(data.profile.home, STRINGS.en.wb.countries) });
+  out.append(buddy);
+
   const actions = el('div', 'plan-actions'), print = el('button', 'primary', t.print);
   print.type = 'button'; print.onclick = () => window.print();
   actions.append(print); out.append(actions);
@@ -692,7 +804,147 @@ micBtn.oncontextmenu = (e) => e.preventDefault(); // long-press menu on phones
 micBtn.onkeydown = (e) => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); startRec(); } };
 micBtn.onkeyup = (e) => { if (e.key === ' ' || e.key === 'Enter') stopRec(); };
 
+// Wellbeing page: breathe → book a counsellor → talk to a senior. Nothing here is sent or stored.
+// wellbeing:pure-start (test.js runs this block, so keep it free of DOM code)
+// Copy of CRISIS in lib/shared.js; test.js fails if they drift apart.
+const CRISIS_CLIENT = /suicid|kill my ?self|\bend (my life|it all)\b|want to die|wanna die|don'?t want to (live|be alive)|no reason to live|self[- ]?harm|hurt (my ?self)|cut(ting)? myself|自杀|自殺|想死|不想活|轻生|结束生命|bunuh diri|tự tử|자살|ฆ่าตัวตาย|आत्महत्या|தற்கொலை|magpakamatay/i;
+// SAMPLE profiles, made up for the demo. Not real students. No Law senior on purpose, so the "no match" message can be shown.
+const SENIORS = [
+  { name: 'Linh', field: 'business', programme: 'Murdoch business', country: 'vn', langs: ['English', 'Tiếng Việt'], year: 3, avail: 'day', help: ['Group projects and presenting in English', '小组作业和英文演讲'] },
+  { name: 'Wei', field: 'business', programme: 'Murdoch business', country: 'cn', langs: ['English', '中文'], year: 2, avail: 'evening', help: ['Keeping up with readings when English is your second language', '英语不是母语时如何跟上阅读'] },
+  { name: 'Ravi', field: 'business', programme: 'Northumbria business', country: 'in', langs: ['English', 'हिन्दी'], year: 3, avail: 'week', help: ['Working part-time while studying', '边打工边读书'] },
+  { name: 'Arjun', field: 'it', programme: 'Kaplan Diploma in IT', country: 'in', langs: ['English', 'हिन्दी'], year: 2, avail: 'day', help: ['Coding assignments and debugging', '编程作业和调试'] },
+  { name: 'Minh', field: 'it', programme: 'Murdoch IT', country: 'vn', langs: ['English', 'Tiếng Việt'], year: 3, avail: 'week', help: ['Balancing group projects with exams', '小组项目和考试之间的平衡'] },
+  { name: 'Siti', field: 'nursing', programme: 'Northumbria nursing', country: 'my', langs: ['English', 'Bahasa Melayu'], year: 2, avail: 'day', help: ['Clinical placements and shift stress', '临床实习和轮班压力'] },
+  { name: 'Grace', field: 'nursing', programme: 'Northumbria nursing', country: 'ph', langs: ['English', 'Filipino'], year: 3, avail: 'evening', help: ['Writing reflective essays', '写反思性论文'] },
+  { name: 'Mei Ling', field: 'psych', programme: 'Murdoch psychology', country: 'sg', langs: ['English', '中文'], year: 3, avail: 'day', help: ['Statistics for psychology', '心理学统计'] },
+  { name: 'Putri', field: 'psych', programme: 'Murdoch psychology', country: 'id', langs: ['English', 'Bahasa Indonesia'], year: 2, avail: 'week', help: ['Settling in when you miss home', '想家时如何适应'] },
+  { name: 'Aye', field: 'early', programme: 'Kaplan Diploma in Early Childhood', country: 'mm', langs: ['English', 'မြန်မာ'], year: 2, avail: 'day', help: ['Practicum and lesson planning', '实习和教案设计'] },
+  { name: 'Nurul', field: 'early', programme: 'Kaplan Diploma in Early Childhood', country: 'sg', langs: ['English', 'Bahasa Melayu'], year: 2, avail: 'evening', help: ['Keeping calm before practicum assessments', '实习考核前保持冷静'] },
+  { name: 'Jun Hao', field: 'masscomm', programme: 'Murdoch mass communication', country: 'cn', langs: ['English', '中文'], year: 3, avail: 'day', help: ['Media projects and tight deadlines', '媒体项目和紧迫的截止日期'] },
+  { name: 'Rizky', field: 'finance', programme: 'Kaplan Financial ACCA', country: 'id', langs: ['English', 'Bahasa Indonesia'], year: 2, avail: 'week', help: ['Planning for ACCA exams', 'ACCA 考试备考规划'] },
+  { name: 'Thu', field: 'finance', programme: 'Murdoch accounting', country: 'vn', langs: ['English', 'Tiếng Việt'], year: 3, avail: 'day', help: ['Accounting assignments and exam nerves', '会计作业和考试紧张'] },
+  { name: 'Kyaw', field: 'engineering', programme: 'Aston supply chain', country: 'mm', langs: ['English', 'မြန်မာ'], year: 3, avail: 'evening', help: ['Managing time in a one-year top-up', '一年制衔接课程的时间管理'] },
+];
+// Course mode: same field + same country first, then same field only. Buddy mode (new students): same country only, same field first.
+// At most 3. Empty list = nobody in that field (or country, for a buddy).
+function matchSeniors(list, field, country, buddy) {
+  const [k, other] = buddy ? ['country', 'field'] : ['field', 'country'], want = { field, country };
+  const same = list.filter((s) => s[k] === want[k]);
+  return [...same.filter((s) => s[other] === want[other]), ...same.filter((s) => s[other] !== want[other])].slice(0, 3);
+}
+// Plan profile "home" is free text ("Vietnam, Vietnamese"): first 4 letters catch the country and most demonyms.
+const homeCountry = (home, names) => Object.keys(names).find((k) => k !== 'other' && String(home || '').toLowerCase().includes(names[k].slice(0, 4).toLowerCase())) || 'other';
+// wellbeing:pure-end
+
+const PHASES = [['in', 4], ['hold', 4], ['out', 6]], CYCLES = 5;
+function breathe(sec) {
+  const t = S().wb, box = el('div', 'breath'), ring = el('div', 'breath-box'), circle = el('div', 'breath-circle');
+  const label = el('p', 'breath-label'), phase = el('span'), count = el('span');
+  phase.setAttribute('aria-live', 'polite'); count.setAttribute('aria-hidden', 'true'); // announce phase changes, not every second
+  const start = el('button', 'primary', t.start), stop = el('button', 'ghost', t.stop);
+  start.type = stop.type = 'button'; stop.hidden = true;
+  ring.append(circle); label.append(phase, ' ', count); box.append(ring, label, start, stop); sec.append(box);
+  let timer = null;
+  const end = (msg) => {
+    clearInterval(timer); circle.className = 'breath-circle'; phase.textContent = msg || ''; count.textContent = '';
+    start.hidden = false; stop.hidden = true; start.focus();
+  };
+  start.onclick = () => {
+    let cycle = 0, i = 0, left = PHASES[0][1];
+    const show = () => { circle.className = 'breath-circle ' + PHASES[i][0]; phase.textContent = S().wb[PHASES[i][0]]; count.textContent = left; };
+    show(); start.hidden = true; stop.hidden = false; stop.focus();
+    timer = setInterval(() => {
+      if (--left > 0) return (count.textContent = left);
+      i = (i + 1) % PHASES.length;
+      if (i === 0 && ++cycle === CYCLES) return end(S().wb.done);
+      left = PHASES[i][1]; show();
+    }, 1000);
+  };
+  stop.onclick = () => end();
+}
+
+// Phone-frame mockups drawn in HTML/CSS from the counselling entry's steps. Static markup, no user data.
+const ICONS = ['<path d="M3 11l9-7 9 7M5 10v10h14V10"/>', '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/>',
+  '<path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"/>', '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>']
+  .map((p) => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`);
+const nav = (tap) => `<div class="nav">${ICONS.map((ic, i) => i === 1 ? `<span class="target${tap ? ' tap' : ''}">${ic}Academic</span>` : `<span>${ic}</span>`).join('')}</div>`;
+const PHONES = [
+  '<div class="top">Kaplan360</div><div class="body"><div class="line" style="width:60%"></div><div class="field"></div><div class="field"></div><div class="btn tap"></div></div>',
+  `<div class="top">Kaplan360</div><div class="body"><div class="line"></div><div class="line" style="width:70%"></div><div class="line" style="width:85%"></div></div>${nav(true)}`,
+  `<div class="top">Academic</div><div class="body"><div class="tabs"><span></span><span class="target tap">Counselling</span><span></span></div><div class="line"></div><div class="line" style="width:75%"></div></div>${nav(false)}`,
+  `<div class="top">Counselling</div><div class="body"><div class="line"></div><div class="line" style="width:65%"></div><div class="btn new tap">+ New</div></div>${nav(false)}`,
+];
+function bookCounsellor(sec) {
+  const t = S().wb, row = el('div', 'phones'), facts = el('div');
+  PHONES.forEach((html, i) => {
+    const fig = el('figure'), phone = el('div', 'phone');
+    phone.innerHTML = html; phone.setAttribute('aria-hidden', 'true'); // the caption says the same thing
+    fig.append(phone, el('figcaption', null, t.shots[i])); row.append(fig);
+  });
+  const done = el('button', 'ghost', t.booked); done.type = 'button';
+  done.onclick = () => { const p = el('p', 'reply', t.wellDone); p.setAttribute('role', 'status'); done.replaceWith(p); };
+  sec.append(row, el('p', 'meta', t.illustration), facts, done);
+  kbReady.then(() => {
+    const c = kb?.find((e) => e.id === 'counselling');
+    if (!c) return;
+    facts.append(el('p', 'notes', t.notes || c.notes), el('p', 'notes', t.reply),
+      sourceMeta(`${c.contact} · ${S().checked} ${fmtDate(c.reviewed)} · `, c.source));
+  });
+}
+
+function seniors(sec, preset = {}) {
+  const t = S().wb, box = el('div', 'profile'), grid = el('div', 'grid'), out = el('div');
+  const pick = (label, opts) => {
+    const s = el('select'), lab = el('label', null, label);
+    for (const [v, text] of Object.entries(opts)) { const o = el('option', null, text); o.value = v; s.append(o); }
+    lab.append(s); grid.append(lab); return s;
+  };
+  const mode = pick(t.mode, t.modes), field = pick(t.field, t.fields), country = pick(t.country, t.countries);
+  if (preset.buddy) { mode.value = 'buddy'; country.value = preset.country || 'other'; }
+  const mind = el('textarea'), mindLab = el('label', null, t.mind); mind.maxLength = 500; mindLab.append(mind);
+  const find = el('button', 'primary', t.find); find.type = 'button';
+  box.append(grid, mindLab, find);
+  sec.append(el('p', 'demo-banner', t.banner), el('p', 'demo-banner', t.notPro), el('p', null, t.seniorIntro), box, out);
+  // Same idea as the server: a crisis phrase shows the crisis card instead, before anything else.
+  const crisis = () => { if (!CRISIS_CLIENT.test(mind.value)) return false; out.replaceChildren(); showCrisis(out); return true; };
+  find.onclick = () => {
+    if (crisis()) return;
+    const buddy = mode.value === 'buddy', list = matchSeniors(SENIORS, field.value, country.value, buddy);
+    out.replaceChildren(...(list.length ? list.map((s) => seniorCard(s, country.value, crisis)) : [el('p', 'none', buddy ? t.noBuddy : t.noMatch)]));
+  };
+}
+
+function seniorCard(s, country, crisis) {
+  const t = S().wb, c = el('div', 'senior'), body = el('div'), av = el('span', 'avatar', s.name.split(' ').map((w) => w[0]).join(''));
+  av.setAttribute('aria-hidden', 'true');
+  const why = el('p', 'why'); why.append(el('strong', null, t.whyLabel), t.why(s, s.country === country, t.countries[s.country]));
+  const b = el('button', 'ghost', t.request); b.type = 'button';
+  b.onclick = () => { if (!crisis()) b.replaceWith(el('p', 'notes', t.confirm(s.name))); };
+  body.append(el('h3', null, s.name), why, el('p', null, s.help[lang === 'zh' ? 1 : 0]), el('p', 'meta', `${t.speaks}: ${s.langs.join(', ')} · ${t.avail[s.avail]}`), b);
+  c.append(av, body);
+  return c;
+}
+
+function openWellbeing(preset) {
+  preset = preset?.buddy ? preset : {}; // also an onclick handler: ignore the click event
+  const open = document.getElementById('wellbeing');
+  if (open && !preset.buddy) return open.scrollIntoView();
+  open?.remove();
+  const t = S().wb;
+  document.getElementById('intro')?.remove();
+  document.getElementById('back').hidden = false;
+  form.hidden = true;
+  const v = el('section', 'plan intro'); v.id = 'wellbeing';
+  v.append(el('h1', null, t.title), el('p', 'stance', t.stance));
+  const part = (title, fill) => { const s = el('section'); s.append(el('h2', null, title)); fill(s); v.append(s); };
+  part(t.breathe, breathe); part(t.book, bookCounsellor); part(t.senior, (s) => seniors(s, preset));
+  chat.append(v);
+  (preset.buddy ? v.lastChild : v).scrollIntoView();
+}
+
 document.getElementById('plan-open').onclick = openPlan;
+document.getElementById('wb-open').onclick = openWellbeing;
 form.onsubmit = (e) => { e.preventDefault(); ask(input.value); };
 input.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(input.value); } };
 document.getElementById('urgent').onclick = () => { const d = el('div'); chat.append(d); showCrisis(d); };

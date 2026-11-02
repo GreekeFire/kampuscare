@@ -2,7 +2,7 @@
 import assert from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { cleanFeedback, knowledge, toCards, validMedia, checkerInput, cleanCheck, contain } from './api/chat.js';
-import { isCrisis, saveQueue, getQueue } from './lib/shared.js';
+import { isCrisis, CRISIS, saveQueue, getQueue } from './lib/shared.js';
 import { cleanEntry, cleanFlags } from './api/review.js';
 import { toPlan, programmeContact } from './api/plan.js';
 import { checkEmail, checkDate, checkTime, mailto, buildIcs, runTool } from './api/act.js';
@@ -123,4 +123,26 @@ assert(q.queued && (await getQueue()).at(-1).question === q.question, 'queued vi
 await assert.rejects(runTool('send_to_student_services', { question: 'x'.repeat(301) }), /too long/, 'queue question max 300');
 await saveQueue([]);
 
-console.log(`ok: crisis filter, plan filter, review queue, make-it-fail checker, make-it-act tools + ${kb.length} knowledge entries`);
+// Wellbeing: index.html stays one file, so run its marked pure block here.
+const html = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+const [from, to] = [html.indexOf('// wellbeing:pure-start'), html.indexOf('// wellbeing:pure-end')];
+assert(from > 0 && to > from, 'wellbeing pure block markers');
+const { CRISIS_CLIENT, SENIORS, matchSeniors, homeCountry } = new Function(html.slice(from, to) + 'return { CRISIS_CLIENT, SENIORS, matchSeniors, homeCountry };')();
+assert(CRISIS_CLIENT.source === CRISIS.source && CRISIS_CLIENT.flags === CRISIS.flags, 'client crisis regex matches lib/shared.js');
+assert(SENIORS.length >= 12 && SENIORS.length <= 16, '12-16 sample seniors');
+const people = [
+  { name: 'A', field: 'it', country: 'cn' }, { name: 'B', field: 'business', country: 'cn' }, { name: 'C', field: 'business', country: 'vn' },
+  { name: 'D', field: 'business', country: 'sg' }, { name: 'E', field: 'business', country: 'vn' }, { name: 'F', field: 'business', country: 'in' },
+];
+assert.deepStrictEqual(matchSeniors(people, 'business', 'vn').map((s) => s.name), ['C', 'E', 'B'], 'field+country first, then field only, max 3');
+assert.deepStrictEqual(matchSeniors(people, 'business', 'other').map((s) => s.name), ['B', 'C', 'D'], 'field only when no country match');
+assert.deepStrictEqual(matchSeniors(people, 'law', 'cn'), [], 'no field match: empty list');
+assert.deepStrictEqual(matchSeniors(people, 'it', 'cn', true).map((s) => s.name), ['A', 'B'], 'buddy: same country only, same field first');
+assert.deepStrictEqual(matchSeniors(people, 'it', 'my', true), [], 'buddy: no one from that country');
+const names = { vn: 'Vietnam', cn: 'China', in: 'India', id: 'Indonesia', other: 'Other' };
+assert(homeCountry('Vietnam, Vietnamese', names) === 'vn' && homeCountry('Chinese', names) === 'cn' && homeCountry('Indonesian', names) === 'id', 'home text to country');
+assert(homeCountry(null, names) === 'other' && homeCountry('Kenya', names) === 'other', 'unknown home: other');
+assert(matchSeniors(SENIORS, 'business', 'vn')[0].name === 'Linh' && matchSeniors(SENIORS, 'law', 'sg').length === 0, 'real sample data');
+assert((html.match(/noMatch: '/g) || []).length === 2, 'friendly no-match message in en and zh');
+
+console.log(`ok: crisis filter, plan filter, review queue, make-it-fail checker, make-it-act tools, wellbeing matching + ${kb.length} knowledge entries`);
