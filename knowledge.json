@@ -3,6 +3,7 @@
     "id": "counselling",
     "group": "Health and wellbeing",
     "title": "Book a counselling session (Student Wellbeing & Counselling)",
+    "title_zh": "预约心理辅导",
     "keywords": [
       "stressed",
       "anxious",
@@ -32,6 +33,7 @@
     "id": "leave",
     "group": "Classes and exams",
     "title": "Apply for leave when you miss class (Leave of Absence)",
+    "title_zh": "缺课请假",
     "keywords": [
       "sick",
       "MC",
@@ -62,6 +64,7 @@
     "id": "attendance",
     "group": "Classes and exams",
     "title": "How attendance works (QR scanning and minimum rates)",
+    "title_zh": "出勤规定和扫码签到",
     "keywords": [
       "attendance",
       "QR code",
@@ -89,6 +92,7 @@
     "id": "timetable",
     "group": "Getting started",
     "title": "Find your classes, timetable and classroom",
+    "title_zh": "查看课程、课表和教室",
     "keywords": [
       "timetable",
       "schedule",
@@ -115,6 +119,7 @@
     "id": "kaplan360-login",
     "group": "Getting started",
     "title": "Get access to the Kaplan360 app",
+    "title_zh": "开通 Kaplan360 账号",
     "keywords": [
       "login",
       "password",
@@ -139,6 +144,7 @@
     "id": "lms",
     "group": "Getting started",
     "title": "Access the LMS (study guides, assignments, results)",
+    "title_zh": "登录 LMS 查看学习资料、作业和成绩",
     "keywords": [
       "LMS",
       "eLearn",
@@ -167,6 +173,7 @@
     "id": "results",
     "group": "Classes and exams",
     "title": "Check exam results",
+    "title_zh": "查询考试成绩",
     "keywords": [
       "results",
       "grades",
@@ -190,6 +197,7 @@
     "id": "appeal",
     "group": "Classes and exams",
     "title": "Appeal against a result (Kaplan proprietary programmes)",
+    "title_zh": "成绩申诉（Kaplan 自有课程）",
     "keywords": [
       "appeal",
       "unfair grade",
@@ -213,6 +221,7 @@
     "id": "withdraw-defer",
     "group": "Classes and exams",
     "title": "Withdraw, defer or transfer your programme",
+    "title_zh": "退学、延期或转课程",
     "keywords": [
       "withdraw",
       "quit",
@@ -240,6 +249,7 @@
     "id": "murdoch-enrolment",
     "group": "Classes and exams",
     "title": "Enrol in units for next term (Murdoch University)",
+    "title_zh": "选修下学期的单元（Murdoch University）",
     "keywords": [
       "enrol",
       "enrolment",
@@ -265,6 +275,7 @@
     "id": "insurance-clinic",
     "group": "Health and wellbeing",
     "title": "See a doctor using your student medical insurance",
+    "title_zh": "用学生医疗保险看医生",
     "keywords": [
       "doctor",
       "clinic",
@@ -294,6 +305,7 @@
     "id": "financial-help",
     "group": "Money and admin",
     "title": "Financial help (repayment plans, bursary, loans, scholarships)",
+    "title_zh": "经济援助（分期付款、助学金、贷款、奖学金）",
     "keywords": [
       "money",
       "can't afford fees",
@@ -320,6 +332,7 @@
     "id": "transport-concession",
     "group": "Money and admin",
     "title": "Student concession card for buses and MRT",
+    "title_zh": "办理巴士和地铁学生优惠卡",
     "keywords": [
       "concession",
       "MRT",
@@ -346,6 +359,7 @@
     "id": "update-details",
     "group": "Getting started",
     "title": "Update your address, phone or email (and tell ICA if on a Student's Pass)",
+    "title_zh": "更新地址、电话或邮箱（持 Student's Pass 需通知 ICA）",
     "keywords": [
       "change address",
       "new phone number",
@@ -370,6 +384,7 @@
     "id": "new-international",
     "group": "Getting started",
     "title": "New international student arrival (airport pickup, Reporting Day, accommodation)",
+    "title_zh": "新国际学生入学（接机、报到日、住宿）",
     "keywords": [
       "arriving",
       "airport",
@@ -398,6 +413,7 @@
     "id": "student-services-contacts",
     "group": "Contacts",
     "title": "Which Student Services team do I contact?",
+    "title_zh": "我该联系哪个学生服务团队？",
     "keywords": [
       "contact",
       "who do I ask",
@@ -430,6 +446,7 @@
     "id": "contact-kaplan-diploma",
     "group": "Contacts",
     "title": "Kaplan Diploma Student Services",
+    "title_zh": "Kaplan Diploma 学生服务",
     "keywords": [
       "Kaplan Diploma",
       "diploma",
@@ -452,6 +469,7 @@
     "id": "contact-foundation-diploma",
     "group": "Contacts",
     "title": "Foundation Diploma Student Services",
+    "title_zh": "Foundation Diploma 学生服务",
     "keywords": [
       "Foundation Diploma",
       "foundation",
@@ -474,6 +492,7 @@
     "id": "contact-english-igcse",
     "group": "Contacts",
     "title": "Professional Business English and IGCSE Student Services",
+    "title_zh": "Professional Business English 和 IGCSE 学生服务",
     "keywords": [
       "Diploma in Professional Business English",
       "English",
@@ -498,6 +517,7 @@
     "id": "contact-murdoch",
     "group": "Contacts",
     "title": "Murdoch University Student Services",
+    "title_zh": "Murdoch University 学生服务",
     "keywords": [
       "Murdoch",
       "Murdoch University",
@@ -521,6 +541,7 @@
     "id": "contact-monash",
     "group": "Contacts",
     "title": "Monash University Student Services",
+    "title_zh": "Monash University 学生服务",
     "keywords": [
       "Monash",
       "Monash University",
@@ -546,6 +567,7 @@
     "id": "contact-ucd",
     "group": "Contacts",
     "title": "University College Dublin (UCD) Student Services",
+    "title_zh": "University College Dublin (UCD) 学生服务",
     "keywords": [
       "UCD",
       "University College Dublin",
@@ -573,6 +595,7 @@
     "id": "contact-northumbria",
     "group": "Contacts",
     "title": "Northumbria University Student Services",
+    "title_zh": "Northumbria University 学生服务",
     "keywords": [
       "Northumbria",
       "Northumbria University",
@@ -601,6 +624,7 @@
     "id": "contact-bcu",
     "group": "Contacts",
     "title": "Birmingham City University (BCU) Student Services",
+    "title_zh": "Birmingham City University (BCU) 学生服务",
     "keywords": [
       "BCU",
       "Birmingham City University",
@@ -626,6 +650,7 @@
     "id": "contact-portsmouth",
     "group": "Contacts",
     "title": "University of Portsmouth (UoP) Student Services",
+    "title_zh": "University of Portsmouth (UoP) 学生服务",
     "keywords": [
       "UoP",
       "University of Portsmouth",
@@ -651,6 +676,7 @@
     "id": "contact-aston",
     "group": "Contacts",
     "title": "Aston University Student Services",
+    "title_zh": "Aston University 学生服务",
     "keywords": [
       "Aston",
       "Aston University",
@@ -676,6 +702,7 @@
     "id": "contact-kaplan-financial",
     "group": "Contacts",
     "title": "Kaplan Financial Student Services",
+    "title_zh": "Kaplan Financial 学生服务",
     "keywords": [
       "Kaplan Financial",
       "ACCA",
@@ -702,6 +729,7 @@
     "id": "campuses",
     "group": "Getting started",
     "title": "Campus locations and opening hours",
+    "title_zh": "校区地址和开放时间",
     "keywords": [
       "campus",
       "address",
@@ -727,6 +755,7 @@
     "id": "campus-emergency",
     "group": "Health and wellbeing",
     "title": "First aid, fire or safety hazard on campus",
+    "title_zh": "校园急救、火警或安全隐患",
     "keywords": [
       "first aid",
       "injured",
@@ -753,6 +782,7 @@
     "id": "disability-support",
     "group": "Health and wellbeing",
     "title": "Support for disabilities or special educational needs",
+    "title_zh": "残障或特殊教育需求支持",
     "keywords": [
       "disability",
       "special needs",
@@ -778,6 +808,7 @@
     "id": "feedback-grievance",
     "group": "Money and admin",
     "title": "Give feedback or make a complaint",
+    "title_zh": "提出意见或投诉",
     "keywords": [
       "complaint",
       "feedback",
@@ -802,6 +833,7 @@
     "id": "clubs",
     "group": "Health and wellbeing",
     "title": "Join student clubs and activities",
+    "title_zh": "加入学生社团和活动",
     "keywords": [
       "clubs",
       "CCA",

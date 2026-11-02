@@ -1,5 +1,6 @@
 // Surprise feature 1: a personalised first-2-weeks plan for incoming students, built only from knowledge.json.
 import { KB, byId, API_KEY, isCrisis, readBody, send, callModel } from '../lib/shared.js';
+import { pickLang } from './chat.js';
 
 const PROFILE_KEYS = ['programme', 'home', 'arrival', 'under18', 'accommodation', 'studentPass'];
 // Same shape as the link regex in index.html, so server and page agree on where a URL ends.
@@ -20,7 +21,7 @@ RULES
 - LMS ("lms"): the task MUST contain the full https link for the student's programme, copied exactly from the knowledge base, and only that one: Murdoch degree students get the Murdoch Moodle link, Kaplan diploma students get Kaplan eLearn.
 - Remind them that Kaplan360 login only arrives after the programme starts ("kaplan360-login").
 - "missing": short list of things this student needs that the knowledge base can't answer (e.g. visa application steps, hostel booking, SIM card). Never answer them yourself.
-- LANGUAGE: first decide which language the student's message is written in. Write every "task", every section "title" and every "missing" item in that language: the language they WROTE in, not their home country's language. An English message gets an English plan; a message in another language gets a plan fully in that language, with the three section titles translated too and the English knowledge-base steps translated, never copied. Keep app and menu names (e.g. "Kaplan360", "Academic", "Counselling", "+ New") in English, inside quotes. Write non-English text as normal characters, never as \\u escape codes.
+- LANGUAGE: if the end of the user message says which language to write the plan in, use that. Otherwise first decide which language the student's message is written in. Write every "task", every section "title" and every "missing" item in that language: the language they WROTE in, not their home country's language. An English message gets an English plan; a message in another language gets a plan fully in that language, with the three section titles translated too and the English knowledge-base steps translated, never copied. Keep app and menu names (e.g. "Kaplan360", "Academic", "Counselling", "+ New") in English, inside quotes. Write non-English text as normal characters, never as \\u escape codes.
 - "profile" values stay in short English. "programme" names the university or Kaplan programme as written in the "student-services-contacts" entry (e.g. "Murdoch University degree", "Kaplan Diploma"). "home" is the home country and language. Use null for anything the student didn't say; under18 and studentPass are true, false or null.
 - If the student's message corrects their profile, those corrected values win.
 
@@ -109,7 +110,9 @@ export default async function handler(req, res) {
 
   // Flash-Lite tends to answer in the home country's language; plain ASCII text is English, so say so.
   // ponytail: ASCII check only; a Malay or Bahasa message typed without accents still gets the model's own judgement.
-  const lang = /^[\x00-\x7F‘’“”–—…]*$/.test(text) ? 'English' : 'the same language as the student message above';
+  // 中文 picked in the header wins: an English-typed profile still gets a Simplified Chinese plan.
+  const lang = pickLang(body.lang) === 'zh' ? 'Simplified Chinese, section titles included'
+    : /^[\x00-\x7F‘’“”–—…]*$/.test(text) ? 'English' : 'the same language as the student message above';
   const user = `${text}${fix ? `\n\nCorrected profile (these values are right): ${JSON.stringify(fix)}` : ''}\n\n(Write the plan in ${lang}.)`;
   const { out, error } = await callModel([
     { role: 'system', content: system(new Date().toISOString().slice(0, 10)) },

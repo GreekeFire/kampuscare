@@ -15,6 +15,8 @@
   header nav { display:flex; align-items:baseline; gap:16px; }
   .urgent { background:none; border:0; padding:0; font:inherit; font-size:14px; color:var(--red); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
   .urgent.back { color:var(--muted); }
+  .lang { font:inherit; font-size:14px; color:var(--muted); background:none; border:0; padding:0; cursor:pointer; }
+  .lang:focus-visible { outline:2px solid var(--accent); outline-offset:2px; color:var(--accent); }
   main { max-width:760px; margin:0 auto; padding:8px 16px 150px; }
 
   /* Start screen: the knowledge base itself, so students see what it covers and where it came from. */
@@ -100,16 +102,20 @@
 <header>
   <a class="brand" href="/">KampusCare</a>
   <nav>
-    <a class="urgent back" href="/" id="back" hidden>← All topics</a>
-    <button class="urgent" type="button" id="urgent">Urgent help</button>
+    <a class="urgent back" href="/" id="back" hidden></a>
+    <button class="urgent" type="button" id="urgent"></button>
+    <select class="lang" id="lang" aria-label="Language / 语言">
+      <option value="en">English</option>
+      <option value="zh">中文</option>
+    </select>
   </nav>
 </header>
 
 <main id="chat">
   <section class="intro" id="intro">
-    <h1>How do I do this at Kaplan?</h1>
-    <p class="stance">Ask in your own words, in any language. KampusCare only answers from the Kaplan pages listed below. If your question isn't covered, it tells you who to ask instead of guessing.</p>
-    <button class="plan-open" type="button" id="plan-open">New international student? <strong>Get your first 2 weeks planned →</strong></button>
+    <h1 id="headline"></h1>
+    <p class="stance" id="stance"></p>
+    <button class="plan-open" type="button" id="plan-open"></button>
     <div class="index" id="index"></div>
     <p class="provenance" id="provenance"></p>
   </section>
@@ -117,59 +123,186 @@
 
 <form id="form">
   <div>
-    <textarea id="input" rows="1" maxlength="1000" placeholder="e.g. how do I apply for leave?" aria-label="Your question"></textarea>
-    <button id="send">Ask</button>
+    <textarea id="input" rows="1" maxlength="1000"></textarea>
+    <button id="send"></button>
   </div>
-  <p>AI-assisted (Google Gemini). Don't type your name, student ID or medical details. Check anything important with Student Services.</p>
+  <p id="footer"></p>
 </form>
 
-<template id="crisis-tpl">
-  <div class="crisis" role="alert">
-    <h3>You don't have to go through this alone</h3>
-    <p>If you are in danger or thinking about ending your life, please reach out now. Someone is available 24 hours a day:</p>
-    <ul>
-      <li>Emergency: <a href="tel:995">995</a></li>
-      <li>Samaritans of Singapore (SOS): <a href="tel:1767">1767</a>, or WhatsApp <a href="https://wa.me/6591511767">9151 1767</a></li>
-      <li>IMH Mental Health Helpline: <a href="tel:63892222">6389 2222</a></li>
-    </ul>
-    <p>When you're ready, Kaplan's counsellors can help too: Kaplan360 → "Academic" → "Counselling".</p>
-  </div>
-</template>
-
 <script>
+// Every piece of text the student sees, in both languages. App/menu names, phone numbers and hotline names stay as they are.
+const STRINGS = {
+  en: {
+    headline: 'How do I do this at Kaplan?',
+    stance: "Ask in your own words, in any language. KampusCare only answers from the Kaplan pages listed below. If your question isn't covered, it tells you who to ask instead of guessing.",
+    planOpen: 'New international student? ', planOpenCta: 'Get your first 2 weeks planned →',
+    groups: {},
+    provenance: (n, date, unverified) => `${n} topics from the Kaplan Singapore Student Handbook and contact list, last checked ${date}. ${unverified} still have Kaplan360 or LMS steps waiting to be confirmed by students.`,
+    placeholder: 'e.g. how do I apply for leave?', inputLabel: 'Your question', ask: 'Ask',
+    allTopics: '← All topics', urgent: 'Urgent help',
+    footer: "AI-assisted (Google Gemini). Don't type your name, student ID or medical details. Check anything important with Student Services.",
+    thinking: 'Checking the Kaplan handbook…',
+    notCovered: "That isn't in KampusCare's Kaplan pages yet. Kaplan general enquiries: +65 6733 1877.",
+    sendReview: 'Send this question to Student Services', privacy: 'Only your question is sent, no name or ID.',
+    sent: 'Sent. Once Student Services approves an answer, KampusCare will be able to answer this.',
+    fbAsk: 'Did this answer it?', yes: 'Yes', no: 'No', thanks: 'Thanks.', thanksDown: 'Thanks. Student Services: +65 6733 1877.',
+    whatWrong: 'What went wrong?', reasons: { not_asked: 'Not what I asked for', incorrect: 'Incorrect/incomplete', slow: 'Slow/buggy' },
+    others: 'Others', tellMore: 'Tell us more (optional)', send: 'Send',
+    sample: 'App steps not yet confirmed', unverified: 'steps unverified', approved: (date) => `Approved by Student Services · ${date}`,
+    checked: 'checked', source: 'source',
+    offline: "Couldn't reach KampusCare. Check your connection and try again.",
+    serverErrors: {},
+    crisis: {
+      title: "You don't have to go through this alone",
+      intro: 'If you are in danger or thinking about ending your life, please reach out now. Someone is available 24 hours a day:',
+      emergency: 'Emergency: ', sos: 'Samaritans of Singapore (SOS): ', or: ', or WhatsApp ', imh: 'IMH Mental Health Helpline: ',
+      after: 'When you\'re ready, Kaplan\'s counsellors can help too: Kaplan360 → "Academic" → "Counselling".',
+    },
+    plan: {
+      title: 'Your first 2 weeks at Kaplan',
+      stance: "Tell us about yourself in your own words and language. KampusCare builds a dated checklist only from the Kaplan pages it knows, and says what it can't answer. Don't include your name, passport or student ID.",
+      aboutYou: 'About you', placeholder: "e.g. I'm from China, starting a Murdoch degree, arriving 20 Nov, under 18, staying in a hostel",
+      generate: 'Generate plan', building: 'Building your plan from the Kaplan handbook…',
+      understood: 'What we understood about you',
+      fields: { programme: 'Programme', home: 'Home country / language', arrival: 'Arrival date', accommodation: 'Staying in', under18: 'Under 18', studentPass: "Student's Pass" },
+      notSure: 'Not sure', yes: 'Yes', no: 'No', notMentioned: 'Not mentioned',
+      regen: 'Not right? Fix it above, then regenerate',
+      noPlan: "We couldn't build a plan from KampusCare's Kaplan pages. Kaplan general enquiries: +65 6733 1877.",
+      done: 'Done', team: 'Your Student Services team', missing: 'Not covered by KampusCare yet',
+      askAbout: 'Ask your Student Services team or programme consultant about:', print: 'Print / save as PDF',
+    },
+  },
+  zh: {
+    headline: '在 Kaplan，这件事怎么办？',
+    stance: '用你自己的话提问，任何语言都可以。KampusCare 只根据下面列出的 Kaplan 页面回答。如果你的问题不在范围内，它会告诉你该找谁，而不是乱猜。',
+    planOpen: '刚来新加坡的国际学生？', planOpenCta: '帮你规划头两周 →',
+    groups: { 'Getting started': '入门须知', 'Classes and exams': '上课和考试', 'Money and admin': '费用和行政', 'Health and wellbeing': '健康与身心', 'Contacts': '联系方式' },
+    provenance: (n, date, unverified) => `共 ${n} 个主题，来自 Kaplan Singapore 学生手册和联系人名单，最近核对于 ${date}。其中 ${unverified} 个的 Kaplan360 或 LMS 步骤还在等待学生确认。`,
+    placeholder: '例如：怎么申请请假？', inputLabel: '你的问题', ask: '提问',
+    allTopics: '← 全部主题', urgent: '紧急求助',
+    footer: '由 AI 辅助（Google Gemini）。请不要输入你的姓名、学号或医疗信息。重要事项请向学生服务处确认。',
+    thinking: '正在查阅 Kaplan 学生手册…',
+    notCovered: 'KampusCare 的 Kaplan 页面里暂时还没有这方面的内容。Kaplan 综合咨询：+65 6733 1877。',
+    sendReview: '把这个问题发送给学生服务处', privacy: '只会发送你的问题，不含姓名或学号。',
+    sent: '已发送。学生服务处审核通过答案后，KampusCare 就能回答这个问题了。',
+    fbAsk: '这个回答有帮助吗？', yes: '有', no: '没有', thanks: '谢谢。', thanksDown: '谢谢。学生服务处：+65 6733 1877。',
+    whatWrong: '哪里有问题？', reasons: { not_asked: '不是我想问的', incorrect: '不正确/不完整', slow: '太慢/有故障' },
+    others: '其他', tellMore: '再多说一点（可选）', send: '发送',
+    sample: 'App 步骤尚未确认', unverified: '步骤未核实', approved: (date) => `学生服务处已审核 · ${date}`,
+    checked: '核对于', source: '来源',
+    offline: '无法连接 KampusCare。请检查网络后再试。',
+    // Server messages arrive in English; show the Chinese version when we have one.
+    serverErrors: {
+      'The AI is busy right now. Please try again in a minute.': 'AI 现在比较忙，请一分钟后再试。',
+      'Something went wrong with the AI. Please try again.': 'AI 出了点问题，请再试一次。',
+      'Tell us a little about yourself first.': '请先简单介绍一下你自己。',
+      'Student Services has a lot of questions right now. Please call +65 6733 1877.': '学生服务处目前收到的问题很多，请致电 +65 6733 1877。',
+      'The review queue is unavailable right now. Please try again.': '暂时无法提交，请稍后再试。',
+    },
+    crisis: {
+      title: '你不需要独自面对这一切',
+      intro: '如果你正处于危险中，或有结束生命的念头，请现在就寻求帮助。以下热线 24 小时都有人接听：',
+      emergency: '紧急情况：', sos: 'Samaritans of Singapore (SOS)：', or: '，或 WhatsApp ', imh: 'IMH Mental Health Helpline：',
+      after: '等你准备好了，Kaplan 的心理辅导员也可以帮助你：Kaplan360 → "Academic" → "Counselling"。',
+    },
+    plan: {
+      title: '你在 Kaplan 的头两周',
+      stance: '用你自己的话和语言介绍一下自己。KampusCare 只根据它掌握的 Kaplan 页面生成带日期的清单，并会说明哪些问题它答不了。请不要填写姓名、护照号码或学号。',
+      aboutYou: '关于你', placeholder: '例如：我来自中国，要读 Murdoch 学位，11月20日到，未满18岁，住宿舍',
+      generate: '生成计划', building: '正在根据 Kaplan 学生手册生成你的计划…',
+      understood: '我们对你的了解',
+      fields: { programme: '课程', home: '国家 / 语言', arrival: '到达日期', accommodation: '住宿', under18: '未满 18 岁', studentPass: "Student's Pass" },
+      notSure: '不确定', yes: '是', no: '否', notMentioned: '未提及',
+      regen: '不对？在上面改好后重新生成',
+      noPlan: '无法根据 KampusCare 的 Kaplan 页面生成计划。Kaplan 综合咨询：+65 6733 1877。',
+      done: '已完成', team: '你的学生服务团队', missing: 'KampusCare 暂未涵盖',
+      askAbout: '以下事项请咨询你的学生服务团队或课程顾问：', print: '打印 / 保存为 PDF',
+    },
+  },
+};
+
+let saved;
+try { saved = localStorage.getItem('lang'); } catch {}
+let lang = STRINGS[saved] ? saved : /^zh/i.test(navigator.language || '') ? 'zh' : 'en';
+const S = () => STRINGS[lang];
+
 const chat = document.getElementById('chat');
 const form = document.getElementById('form');
 const input = document.getElementById('input');
 const sendBtn = document.getElementById('send');
+const langSel = document.getElementById('lang');
 const history = [];
+let kb = null;
 
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const scroll = () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-const showCrisis = (into) => { into.append(document.getElementById('crisis-tpl').content.cloneNode(true)); scroll(); };
-const fmtDate = (d) => new Date(d + 'T00:00').toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' });
+const fmtDate = (d) => new Date(d + 'T00:00').toLocaleDateString(lang === 'zh' ? 'zh-SG' : 'en-SG', { day: 'numeric', month: 'short', year: 'numeric' });
+const errText = (m) => el('p', 'err', S().serverErrors[m] || m);
+const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+// Wording follows the chosen language; numbers and links never change.
+function showCrisis(into) {
+  const c = S().crisis, d = el('div', 'crisis'), ul = el('ul');
+  d.setAttribute('role', 'alert');
+  const a = (href, text) => { const x = el('a', null, text); x.href = href; return x; };
+  const li = (...parts) => { const x = el('li'); x.append(...parts); return x; };
+  ul.append(li(c.emergency, a('tel:995', '995')),
+    li(c.sos, a('tel:1767', '1767'), c.or, a('https://wa.me/6591511767', '9151 1767')),
+    li(c.imh, a('tel:63892222', '6389 2222')));
+  d.append(el('h3', null, c.title), el('p', null, c.intro), ul, el('p', null, c.after));
+  into.append(d); scroll();
+}
+
+const topicTitle = (e) => (lang === 'zh' && e.title_zh) || e.title.replace(/ \(.*\)$/, '');
 
 // Start screen is built from knowledge.json, so it always matches what the bot can answer.
-fetch('/knowledge.json').then((r) => r.json()).then((kb) => {
+function renderIndex() {
+  const index = document.getElementById('index');
+  if (!kb || !index) return;
   const groups = { 'Getting started': [], 'Classes and exams': [], 'Money and admin': [], 'Health and wellbeing': [], 'Contacts': [] };
   kb.forEach((e) => (groups[e.group] ||= []).push(e));
-  const index = document.getElementById('index');
+  index.replaceChildren();
   for (const [name, entries] of Object.entries(groups)) {
-    const sec = el('section'); sec.append(el('h2', null, name));
+    const sec = el('section'); sec.append(el('h2', null, S().groups[name] || name));
     const ul = el('ul');
     entries.forEach((e) => {
-      const b = el('button', null, e.title.replace(/ \(.*\)$/, '')); b.type = 'button';
-      if (e.sample) b.append(el('span', 'tag', 'steps unverified'));
-      b.onclick = () => ask(e.title.replace(/ \(.*\)$/, ''));
+      const b = el('button', null, topicTitle(e)); b.type = 'button';
+      if (e.sample) b.append(el('span', 'tag', S().unverified));
+      b.onclick = () => ask(topicTitle(e));
       const li = el('li'); li.append(b); ul.append(li);
     });
     sec.append(ul); index.append(sec);
   }
   const latest = kb.map((e) => e.reviewed).sort().at(-1);
-  const unverified = kb.filter((e) => e.sample).length;
-  document.getElementById('provenance').textContent =
-    `${kb.length} topics from the Kaplan Singapore Student Handbook and contact list, last checked ${fmtDate(latest)}. ` +
-    `${unverified} still have Kaplan360 or LMS steps waiting to be confirmed by students.`;
-}).catch(() => {});
+  document.getElementById('provenance').textContent = S().provenance(kb.length, fmtDate(latest), kb.filter((e) => e.sample).length);
+}
+
+// Re-labels the page chrome and the start screen. Answers already on screen keep their language.
+function applyLang() {
+  const t = S();
+  document.documentElement.lang = lang === 'zh' ? 'zh-Hans' : 'en';
+  langSel.value = lang;
+  document.getElementById('back').textContent = t.allTopics;
+  document.getElementById('urgent').textContent = t.urgent;
+  input.placeholder = t.placeholder; input.setAttribute('aria-label', t.inputLabel);
+  sendBtn.textContent = t.ask;
+  document.getElementById('footer').textContent = t.footer;
+  if (document.getElementById('headline')) {
+    document.getElementById('headline').textContent = t.headline;
+    document.getElementById('stance').textContent = t.stance;
+    document.getElementById('plan-open').replaceChildren(t.planOpen, el('strong', null, t.planOpenCta));
+    renderIndex();
+  }
+}
+
+langSel.onchange = () => {
+  lang = STRINGS[langSel.value] ? langSel.value : 'en';
+  try { localStorage.setItem('lang', lang); } catch {}
+  applyLang();
+};
+applyLang();
+
+fetch('/knowledge.json').then((r) => r.json()).then((data) => { kb = data; renderIndex(); }).catch(() => {});
 
 // Steps come from the model: build nodes, never innerHTML. "\n" = line break, https URLs = links.
 function stepItem(text) {
@@ -185,53 +318,51 @@ function stepItem(text) {
 }
 
 function answer(c) {
-  const d = el('div', 'answer');
-  if (c.sample) d.append(el('span', 'sample', 'App steps not yet confirmed'));
-  if (c.approved) d.append(el('span', 'approved', `Approved by Student Services · ${fmtDate(c.reviewed)}`));
+  const t = S(), d = el('div', 'answer');
+  if (c.sample) d.append(el('span', 'sample', t.sample));
+  if (c.approved) d.append(el('span', 'approved', t.approved(fmtDate(c.reviewed))));
   d.append(el('h3', null, c.title));
   if (c.why) d.append(el('p', 'why', c.why));
   const ol = el('ol', 'steps'); c.steps.forEach((s) => ol.append(stepItem(s))); d.append(ol);
   if (c.notes) d.append(el('p', 'notes', c.notes));
   const meta = el('div', 'meta');
-  meta.append(`${c.contact} · checked ${fmtDate(c.reviewed)}`);
-  if (c.source) { const a = el('a', null, 'source'); a.href = c.source; a.target = '_blank'; a.rel = 'noopener'; meta.append(' · ', a); }
+  meta.append(`${c.contact} · ${t.checked} ${fmtDate(c.reviewed)}`);
+  if (c.source) { const a = el('a', null, t.source); a.href = c.source; a.target = '_blank'; a.rel = 'noopener'; meta.append(' · ', a); }
   d.append(meta);
   return d;
 }
 
 // Surprise feature 2: students opt in to send an unanswered question for staff review. Never sent automatically.
 function offerReview(question) {
-  const d = el('div', 'offer'), b = el('button', 'ghost', 'Send this question to Student Services');
+  const t = S(), d = el('div', 'offer'), b = el('button', 'ghost', t.sendReview);
   b.type = 'button';
-  d.append(b, el('p', 'meta', 'Only your question is sent, no name or ID.'));
+  d.append(b, el('p', 'meta', t.privacy));
   b.onclick = async () => {
     b.disabled = true;
     try {
-      const r = await fetch('/api/review', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'ask', question }) });
-      const data = await r.json();
+      const data = await (await post('/api/review', { action: 'ask', question })).json();
       d.textContent = '';
       if (data.crisis) return showCrisis(d);
-      d.append(data.error ? el('p', 'err', data.error) : el('p', 'notes', 'Sent. Once Student Services approves an answer, KampusCare will be able to answer this.'));
-    } catch { d.replaceChildren(el('p', 'err', "Couldn't reach KampusCare. Check your connection and try again.")); }
+      d.append(data.error ? errText(data.error) : el('p', 'notes', t.sent));
+    } catch { d.replaceChildren(el('p', 'err', t.offline)); }
   };
   return d;
 }
 
 function feedback(ids, question) {
-  const f = el('p', 'fb');
+  const t = S(), f = el('p', 'fb');
   const btn = (label, onclick) => { const b = el('button', null, label); b.type = 'button'; b.onclick = onclick; return b; };
-  const done = (body, msg) => { f.textContent = msg; fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...body, ids }) }); };
+  const done = (body, msg) => { f.textContent = msg; post('/api/chat', { ...body, ids }); };
   const no = (reason, comment) => {
-    done({ feedback: 'down', reason, comment }, 'Thanks. Student Services: +65 6733 1877.');
+    done({ feedback: 'down', reason, comment }, t.thanksDown);
     if (reason === 'incorrect') f.after(offerReview(question));
   };
-  f.append('Did this answer it?', btn('Yes', () => done({ feedback: 'up' }, 'Thanks.')), btn('No', () => {
-    f.replaceChildren('What went wrong?');
-    for (const [reason, label] of [['not_asked', 'Not what I asked for'], ['incorrect', 'Incorrect/incomplete'], ['slow', 'Slow/buggy']])
-      f.append(btn(label, () => no(reason)));
-    f.append(btn('Others', () => {
-      const inp = el('input'); inp.maxLength = 200; inp.placeholder = 'Tell us more (optional)'; inp.setAttribute('aria-label', 'What went wrong');
-      const submit = btn('Send', () => no('other', inp.value.trim()));
+  f.append(t.fbAsk, btn(t.yes, () => done({ feedback: 'up' }, t.thanks)), btn(t.no, () => {
+    f.replaceChildren(t.whatWrong);
+    for (const [reason, label] of Object.entries(t.reasons)) f.append(btn(label, () => no(reason)));
+    f.append(btn(t.others, () => {
+      const inp = el('input'); inp.maxLength = 200; inp.placeholder = t.tellMore; inp.setAttribute('aria-label', t.whatWrong);
+      const submit = btn(t.send, () => no('other', inp.value.trim()));
       inp.onkeydown = (e) => { if (e.key === 'Enter') submit.click(); };
       f.replaceChildren(inp, submit); inp.focus();
     }));
@@ -242,42 +373,42 @@ function feedback(ids, question) {
 async function ask(text) {
   text = text.trim();
   if (!text || sendBtn.disabled) return;
+  const t = S();
   document.getElementById('intro')?.remove();
   document.getElementById('back').hidden = false;
   chat.append(el('p', 'me', text));
-  const bot = el('div'); bot.append(el('p', 'thinking', 'Checking the Kaplan handbook…')); chat.append(bot); scroll();
+  const bot = el('div'); bot.append(el('p', 'thinking', t.thinking)); chat.append(bot); scroll();
   input.value = ''; sendBtn.disabled = true;
   try {
-    const r = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text, history }) });
-    const data = await r.json();
+    const data = await (await post('/api/chat', { message: text, history, lang })).json();
     bot.textContent = '';
     if (data.crisis) return showCrisis(bot);
-    if (data.error) { bot.append(el('p', 'err', data.error)); return; }
+    if (data.error) { bot.append(errText(data.error)); return; }
     bot.append(el('p', 'reply', data.reply || ''));
     data.cards.forEach((c) => bot.append(answer(c)));
-    if (!data.cards.length) bot.append(el('p', 'none', "That isn't in KampusCare's Kaplan pages yet. Kaplan general enquiries: +65 6733 1877."), offerReview(text));
+    if (!data.cards.length) bot.append(el('p', 'none', t.notCovered), offerReview(text));
     bot.append(feedback(data.cards.map((c) => c.id), text));
     history.push({ role: 'user', content: text }, { role: 'assistant', content: data.reply + ' [' + data.cards.map((c) => c.id).join(', ') + ']' });
   } catch {
-    bot.textContent = ''; bot.append(el('p', 'err', "Couldn't reach KampusCare. Check your connection and try again."));
+    bot.textContent = ''; bot.append(el('p', 'err', t.offline));
   } finally { sendBtn.disabled = false; input.focus(); scroll(); }
 }
 
 // Surprise feature 1: arrival plan. Same knowledge base, new user group, different output.
-const PROFILE = [['programme', 'Programme'], ['home', 'Home country / language'], ['arrival', 'Arrival date'], ['accommodation', 'Staying in'], ['under18', 'Under 18'], ['studentPass', "Student's Pass"]];
+const PROFILE = ['programme', 'home', 'arrival', 'accommodation', 'under18', 'studentPass'];
 const isDate = (d) => /^\d{4}-\d{2}-\d{2}$/.test(d || '');
 
 function openPlan() {
+  const t = S().plan;
   document.getElementById('intro')?.remove();
   document.getElementById('back').hidden = false;
   form.hidden = true;
   const v = el('section', 'plan intro');
-  v.append(el('h1', null, 'Your first 2 weeks at Kaplan'),
-    el('p', 'stance', "Tell us about yourself in your own words and language. KampusCare builds a dated checklist only from the Kaplan pages it knows, and says what it can't answer. Don't include your name, passport or student ID."));
+  v.append(el('h1', null, t.title), el('p', 'stance', t.stance));
   const box = el('div', 'plan-input');
-  const ta = el('textarea'); ta.maxLength = 1000; ta.setAttribute('aria-label', 'About you');
-  ta.placeholder = "e.g. I'm from China, starting a Murdoch degree, arriving 20 Nov, under 18, staying in a hostel";
-  const go = el('button', 'primary', 'Generate plan'); go.type = 'button';
+  const ta = el('textarea'); ta.maxLength = 1000; ta.setAttribute('aria-label', t.aboutYou);
+  ta.placeholder = t.placeholder;
+  const go = el('button', 'primary', t.generate); go.type = 'button';
   const out = el('div');
   box.append(ta, go); v.append(box, out); chat.append(v); ta.focus();
 
@@ -285,78 +416,78 @@ function openPlan() {
     const text = ta.value.trim();
     if (!text || go.disabled) return ta.focus();
     go.disabled = true;
-    out.replaceChildren(el('p', 'thinking', 'Building your plan from the Kaplan handbook…'));
+    out.replaceChildren(el('p', 'thinking', t.building));
     try {
-      const r = await fetch('/api/plan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, profile }) });
-      const data = await r.json();
+      const data = await (await post('/api/plan', { text, profile, lang })).json();
       out.textContent = '';
       if (data.crisis) return showCrisis(out);
-      if (data.error) return out.append(el('p', 'err', data.error));
+      if (data.error) return out.append(errText(data.error));
       renderPlan(out, data, generate);
     } catch {
-      out.replaceChildren(el('p', 'err', "Couldn't reach KampusCare. Check your connection and try again."));
+      out.replaceChildren(el('p', 'err', S().offline));
     } finally { go.disabled = false; }
   }
   go.onclick = () => generate();
 }
 
 const sourceMeta = (prefix, href) => {
-  const meta = el('div', 'meta'), a = el('a', null, 'source');
+  const meta = el('div', 'meta'), a = el('a', null, S().source);
   a.href = href; a.target = '_blank'; a.rel = 'noopener';
   meta.append(prefix, a); return meta;
 };
 
 function renderPlan(out, data, regenerate) {
+  const t = S().plan, checked = S().checked;
   // What the AI understood, editable: fix a field and regenerate.
   const prof = el('div', 'profile'), grid = el('div', 'grid'), fields = {};
-  prof.append(el('h2', null, 'What we understood about you'));
-  for (const [k, label] of PROFILE) {
+  prof.append(el('h2', null, t.understood));
+  for (const k of PROFILE) {
     const val = data.profile[k];
     let f;
     if (k === 'under18' || k === 'studentPass') {
       f = el('select');
-      for (const [v, t] of [['', 'Not sure'], ['true', 'Yes'], ['false', 'No']]) { const o = el('option', null, t); o.value = v; f.append(o); }
+      for (const [v, label] of [['', t.notSure], ['true', t.yes], ['false', t.no]]) { const o = el('option', null, label); o.value = v; f.append(o); }
       f.value = val == null ? '' : String(val);
     } else {
       f = el('input'); f.type = k === 'arrival' && isDate(val) ? 'date' : 'text';
-      f.value = val || ''; f.placeholder = 'Not mentioned'; f.maxLength = 80;
+      f.value = val || ''; f.placeholder = t.notMentioned; f.maxLength = 80;
     }
-    const lab = el('label', null, label); lab.append(f); grid.append(lab); fields[k] = f;
+    const lab = el('label', null, t.fields[k]); lab.append(f); grid.append(lab); fields[k] = f;
   }
-  const regen = el('button', 'ghost', 'Not right? Fix it above, then regenerate'); regen.type = 'button';
+  const regen = el('button', 'ghost', t.regen); regen.type = 'button';
   regen.onclick = () => regenerate(Object.fromEntries(Object.entries(fields).map(([k, f]) =>
     [k, f.tagName === 'SELECT' ? (f.value === '' ? null : f.value === 'true') : f.value.trim() || null])));
   prof.append(grid, regen); out.append(prof);
 
-  if (!data.sections.length) out.append(el('p', 'none', "We couldn't build a plan from KampusCare's Kaplan pages. Kaplan general enquiries: +65 6733 1877."));
+  if (!data.sections.length) out.append(el('p', 'none', t.noPlan));
   for (const s of data.sections) {
     const ul = el('ul', 'items');
     for (const i of s.items) {
       const li = el('li'), cb = el('input'), body = el('div');
       body.append(...stepItem(i.task).childNodes);
-      cb.type = 'checkbox'; cb.setAttribute('aria-label', 'Done');
+      cb.type = 'checkbox'; cb.setAttribute('aria-label', t.done);
       if (i.due) body.prepend(el('span', 'due', isDate(i.due) ? fmtDate(i.due) : i.due));
-      if (i.sample) body.prepend(el('span', 'sample', 'App steps not yet confirmed'), el('br'));
-      li.append(cb, body, sourceMeta(`${i.contact} · checked ${fmtDate(i.reviewed)} · `, i.source)); ul.append(li);
+      if (i.sample) body.prepend(el('span', 'sample', S().sample), el('br'));
+      li.append(cb, body, sourceMeta(`${i.contact} · ${checked} ${fmtDate(i.reviewed)} · `, i.source)); ul.append(li);
     }
     out.append(el('h2', null, s.title), ul);
   }
 
-  out.append(el('h2', null, 'Your Student Services team'), el('p', null, data.contact.line),
-    sourceMeta(`checked ${fmtDate(data.contact.reviewed)} · `, data.contact.source));
+  out.append(el('h2', null, t.team), el('p', null, data.contact.line),
+    sourceMeta(`${checked} ${fmtDate(data.contact.reviewed)} · `, data.contact.source));
 
   if (data.missing.length) {
     const ul = el('ul', 'notes'); data.missing.forEach((m) => ul.append(el('li', null, m)));
-    out.append(el('h2', null, 'Not covered by KampusCare yet'), el('p', 'notes', 'Ask your Student Services team or programme consultant about:'), ul);
+    out.append(el('h2', null, t.missing), el('p', 'notes', t.askAbout), ul);
   }
 
-  const actions = el('div', 'plan-actions'), print = el('button', 'primary', 'Print / save as PDF');
+  const actions = el('div', 'plan-actions'), print = el('button', 'primary', t.print);
   print.type = 'button'; print.onclick = () => window.print();
   actions.append(print); out.append(actions);
 }
 
 document.getElementById('plan-open').onclick = openPlan;
-form.onsubmit =(e) => { e.preventDefault(); ask(input.value); };
+form.onsubmit = (e) => { e.preventDefault(); ask(input.value); };
 input.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(input.value); } };
 document.getElementById('urgent').onclick = () => { const d = el('div'); chat.append(d); showCrisis(d); };
 </script>

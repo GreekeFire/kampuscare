@@ -12,8 +12,8 @@ RULES
 - Set "crisis" to true ONLY if the student expresses wanting to die, suicide, self-harm, or being in immediate physical danger. Stress, anxiety, sadness, loneliness, exam pressure or "I'm so done with this module" are NOT a crisis: answer those normally and point to the "counselling" entry gently, without mentioning hotlines.
 
 Return JSON only, in this shape:
-{"reply": string, "crisis": boolean, "matches": [{"id": string, "why": string, "steps": [string]}]}
-- "reply", "why" and every item in "steps" must be written in the SAME language as the student's message. If the student wrote in Chinese, translate each knowledge-base step into Chinese; do not copy the English steps.
+{"reply": string, "crisis": boolean, "matches": [{"id": string, "why": string, "steps": [string], "notes": string}]}
+- "reply", "why", every item in "steps" and "notes" must be written in the reply language (the student's language unless the message says otherwise). If that is Chinese, translate each knowledge-base step and the entry's notes into Chinese; do not copy the English. "notes" is "" if the entry has none.
 - "why" is one sentence on why this entry fits the student's situation.
 - Write non-English text as normal characters, never as \\u escape codes.
 
@@ -31,17 +31,22 @@ export async function knowledge() {
   return { kb, byId: Object.fromEntries(kb.map((e) => [e.id, e])) };
 }
 
+// Language picked in the header: 'zh' or English. Anything else is English.
+export const LANGS = { en: 'English', zh: 'Simplified Chinese' };
+export const pickLang = (l) => (l === 'zh' ? 'zh' : 'en');
+
 // Contacts, sources and review dates always come from the knowledge base, never from the model.
-export function toCards(matches = [], byId) {
+// Card titles use title_zh in 中文 mode; approved review entries have none and stay English.
+export function toCards(matches = [], byId, lang = 'en') {
   return matches
     .filter((m) => byId[m.id])
     .slice(0, 3)
     .map((m) => {
       const e = byId[m.id];
       return {
-        id: e.id, title: e.title, why: m.why || '',
+        id: e.id, title: (lang === 'zh' && e.title_zh) || e.title, why: m.why || '',
         steps: Array.isArray(m.steps) && m.steps.length ? m.steps : e.steps,
-        notes: e.notes, contact: e.contact, source: e.source, reviewed: e.reviewed, sample: e.sample, approved: e.approved,
+        notes: (m.notes && String(m.notes)) || e.notes, contact: e.contact, source: e.source, reviewed: e.reviewed, sample: e.sample, approved: e.approved,
       };
     });
 }
@@ -80,10 +85,12 @@ export default async function handler(req, res) {
     .filter((h) => h && (h.role === 'user' || h.role === 'assistant'))
     .map((h) => ({ role: h.role, content: String(h.content).slice(0, 1000) }));
 
+  const lang = pickLang(body.lang);
   const { kb, byId } = await knowledge();
-  const messages = [{ role: 'system', content: system(kb) }, ...history, { role: 'user', content: message }];
+  const messages = [{ role: 'system', content: system(kb) }, ...history,
+    { role: 'user', content: `${message}\n\n(Reply in ${LANGS[lang]} unless the student clearly wrote in another language. Translate "steps" and "notes" too. Keep app and menu names in English.)` }];
   const { out, error } = await callModel(messages);
   if (error) return send(res, 502, { error });
   if (out.crisis) return send(res, 200, { crisis: true });
-  return send(res, 200, { reply: String(out.reply || ''), cards: toCards(out.matches, byId) });
+  return send(res, 200, { reply: String(out.reply || ''), cards: toCards(out.matches, byId, lang) });
 }

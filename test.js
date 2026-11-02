@@ -18,7 +18,7 @@ assert(cleanFeedback({ feedback: 'down', reason: 'incorrect' }).reason === 'inco
 const kb = JSON.parse(readFileSync(new URL('./knowledge.json', import.meta.url), 'utf8'));
 const ids = new Set();
 for (const e of kb) {
-  for (const k of ['id', 'group', 'title', 'summary', 'steps', 'contact', 'source', 'reviewed']) assert(e[k], `${e.id}: missing ${k}`);
+  for (const k of ['id', 'group', 'title', 'title_zh', 'summary', 'steps', 'contact', 'source', 'reviewed']) assert(String(e[k] ?? '').trim(), `${e.id}: missing ${k}`);
   assert(!ids.has(e.id), `duplicate id ${e.id}`);
   ids.add(e.id);
 }
@@ -68,6 +68,9 @@ const merged = await knowledge();
 assert(merged.byId['approved-a1'] && !merged.byId['approved-p1'] && !merged.byId['approved-r1'] && merged.kb.length === kb.length + 1, 'only approved entries merged');
 const [card] = toCards([{ id: 'approved-a1', why: 'w' }], merged.byId);
 assert(card.approved === true && card.reviewed === '2026-11-02', 'approved card badge data');
+const [zhCard, zhApproved] = toCards([{ id: 'counselling' }, { id: 'approved-a1' }], merged.byId, 'zh');
+assert(zhCard.title === kb[0].title_zh && zhApproved.title === 'Print on campus', 'zh card titles: title_zh, approved entries keep English');
+assert(toCards([{ id: 'counselling' }], merged.byId, 'xx')[0].title === kb[0].title, 'unknown lang falls back to English title');
 await saveQueue([]);
 
 console.log(`ok: crisis filter, plan filter, review queue + ${kb.length} knowledge entries`);
