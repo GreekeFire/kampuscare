@@ -127,7 +127,14 @@ await saveQueue([]);
 const html = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
 const [from, to] = [html.indexOf('// wellbeing:pure-start'), html.indexOf('// wellbeing:pure-end')];
 assert(from > 0 && to > from, 'wellbeing pure block markers');
-const { CRISIS_CLIENT, SENIORS, matchSeniors, homeCountry } = new Function(html.slice(from, to) + 'return { CRISIS_CLIENT, SENIORS, matchSeniors, homeCountry };')();
+const { CRISIS_CLIENT, SENIORS, matchSeniors, homeCountry, PATTERNS, ROUNDS, GROUNDING } = new Function(html.slice(from, to) + 'return { CRISIS_CLIENT, SENIORS, matchSeniors, homeCountry, PATTERNS, ROUNDS, GROUNDING };')();
+const secs = (p) => p.reduce((s, [, n]) => s + n, 0);
+assert.deepStrictEqual(PATTERNS.quick, [['in', 4], ['out', 6]], 'quick calm: in 4, out 6');
+assert.deepStrictEqual(PATTERNS.box.map(([p]) => p), ['in', 'hold', 'out', 'hold'], 'box has 4 phases');
+assert.deepStrictEqual(PATTERNS.relax, [['in', 4], ['hold', 7], ['out', 8]], 'relax: 4-7-8');
+assert(secs(PATTERNS.quick) === 10 && secs(PATTERNS.box) === 16 && secs(PATTERNS.relax) === 19, 'round lengths');
+assert(ROUNDS === 5 && String(GROUNDING) === '5,4,3,2,1', '5 rounds, 5-4-3-2-1 grounding');
+for (const k of ['patterns', 'tips', 'ground', 'feelReply']) assert((html.match(new RegExp(`\\b${k}: [\\[{]`, 'g')) || []).length === 2, `${k} in en and zh`);
 assert(CRISIS_CLIENT.source === CRISIS.source && CRISIS_CLIENT.flags === CRISIS.flags, 'client crisis regex matches lib/shared.js');
 assert(SENIORS.length >= 12 && SENIORS.length <= 16, '12-16 sample seniors');
 const people = [
